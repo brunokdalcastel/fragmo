@@ -53,6 +53,21 @@ internal static class Strings
     // Igual nos dois idiomas, por isso é constante e não passa por T().
     public const string SaveFilter = "PNG|*.png|JPEG|*.jpg|Bitmap|*.bmp";
 
+    // Editor: dicas das ferramentas e ações (com o atalho).
+    public static string ToolPen => T("Caneta (P)", "Pen (P)");
+    public static string ToolLine => T("Linha (L)", "Line (L)");
+    public static string ToolArrow => T("Seta (A)", "Arrow (A)");
+    public static string ToolRectangle => T("Retângulo (R)", "Rectangle (R)");
+    public static string ToolText => T("Texto (T)", "Text (T)");
+    public static string ToolColor => T("Cor", "Color");
+    public static string ToolThickness => T("Espessura", "Thickness");
+    public static string MoreColors => T("Mais cores…", "More colors…");
+    public static string ActionUndo => T("Desfazer (Ctrl+Z)", "Undo (Ctrl+Z)");
+    public static string ActionRedo => T("Refazer (Ctrl+Y)", "Redo (Ctrl+Y)");
+    public static string ActionCopy => T("Copiar (Ctrl+C)", "Copy (Ctrl+C)");
+    public static string ActionSave => T("Salvar (Ctrl+S)", "Save (Ctrl+S)");
+    public static string ActionClose => T("Fechar (Esc)", "Close (Esc)");
+
     public static string UnexpectedError => T(
         "Ocorreu um erro inesperado. Detalhes gravados em {0}.\n\n{1}",
         "An unexpected error occurred. Details were written to {0}.\n\n{1}");

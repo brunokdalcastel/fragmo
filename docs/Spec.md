@@ -350,11 +350,11 @@ public sealed class AppSettings
 ## Phase 3: Editor básico (barra de ferramentas, anotações, desfazer/refazer)
 
 ### `src/Fragmo/Ui/Theme.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: `internal sealed record Theme(Color Background, Color Surface, Color Foreground, Color Border, Color Accent, Color AccentForeground)`, com `static Theme Light`, `static Theme Dark` (Accent `#FF6A1A` nos dois; o **escuro é o padrão** do app: fundo `#1E1E22`, superfície `#2A2A30`, texto `#F2F2F2`, borda `#3A3A42`) e `static Theme Resolve(ThemeMode mode)`: em `System`, lê `HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize\AppsUseLightTheme` (0 = escuro; ausente = claro).
 
 ### `src/Fragmo/Editor/IAnnotation.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction:
 ```csharp
 namespace Fragmo.Editor;
@@ -367,7 +367,7 @@ public sealed record StrokeStyle(Color Color, int Thickness);
 ```
 
 ### `src/Fragmo/Editor/Annotations.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: Classes `sealed` que implementam `IAnnotation`, todas com `SmoothingMode.AntiAlias` e `Pen` com `LineCap.Round`:
   - `PenAnnotation(StrokeStyle, List<Point> points)` → `DrawLines` (1 ponto vira um círculo).
   - `LineAnnotation(StrokeStyle, Point a, Point b)`.
@@ -377,27 +377,28 @@ public sealed record StrokeStyle(Color Color, int Thickness);
   - `Bounds` de cada um inclui a espessura + 2px de margem.
 
 ### `src/Fragmo/Editor/AnnotationHistory.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: `public sealed class AnnotationHistory` (lógica pura): `IReadOnlyList<IAnnotation> Items`, `void Add(IAnnotation a)` (limpa a pilha de refazer), `bool Undo()`, `bool Redo()`, `bool CanUndo`, `bool CanRedo`, `void Clear()`, `event Action? Changed`.
 
 ### `src/Fragmo/Editor/ToolKind.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: `public enum ToolKind { Select, Pen, Line, Arrow, Rectangle, Text }` (a Fase 4 acrescenta `Marker, Blur, Step`).
 
 ### `src/Fragmo/Editor/ImageComposer.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: `internal static class ImageComposer` com `Bitmap Compose(Bitmap baseImage, IReadOnlyList<IAnnotation> items, Rectangle selection)`: copia o bitmap base, desenha todas as anotações nele (coordenadas do bitmap) e devolve `ScreenCapturer.Crop(result, selection)`. É o único caminho de exportação (copiar, salvar e, depois, imprimir/fixar).
 
 ### `src/Fragmo/Editor/EditorToolbar.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: `internal sealed class EditorToolbar : Control` desenhado à mão com `Theme` (sem `ToolStrip`, para ter layout próprio):
   - Botões de 32×32 px com ícones vetoriais desenhados em GDI+ (sem imagens): ferramentas `Pen, Line, Arrow, Rectangle, Text`; separador; amostra da cor atual (clique abre `ColorDialog` + 8 cores rápidas num menu); espessura (−/+ ou menu 1/2/3/5/8); separador; Desfazer, Refazer; separador; Copiar, Salvar, Fechar.
   - Botão ativo com fundo `Accent`; foco/hover com `Surface`; dica (`ToolTip`) com o atalho em cada botão.
   - Eventos: `ToolChanged(ToolKind)`, `StyleChanged(StrokeStyle)`, `UndoClicked`, `RedoClicked`, `CopyClicked`, `SaveClicked`, `CloseClicked`. `void SetUndoRedo(bool canUndo, bool canRedo)` desativa os botões.
   - Duas barras: horizontal (ações) e vertical (ferramentas), como instâncias com `Orientation`.
+- Nota da implementação: o evento virou `StrokeStyleChanged` (`StyleChanged` já existe em `Control` e dava CS0108). A vertical tem ferramentas + cor + espessura; a horizontal tem desfazer/refazer + copiar/salvar/fechar. Clicar na ferramenta ativa volta para `Select`. Acrescentado `SetTool(ToolKind)` para refletir os atalhos de teclado.
 
 ### `src/Fragmo/Overlay/SelectionOverlay.cs`
-- Action: Modify
+- Action: Modify [x]
 - Instruction: Integrar o editor ao overlay.
   - Ao entrar em `Selected`, criar as duas `EditorToolbar` como controles filhos: horizontal abaixo da seleção à direita, vertical à direita da seleção; se não couber, inverter o lado (usar `Screen.FromPoint` para ficar no mesmo monitor e não sair da tela). Reposicionar quando a seleção mudar.
   - Campo `AnnotationHistory _history`, `ToolKind _tool = Select`, `StrokeStyle _style` (vem de `settings.LastColor`/`LastThickness`).
@@ -407,29 +408,30 @@ public sealed record StrokeStyle(Color Color, int Thickness);
   - Atalhos: `P` caneta, `L` linha, `A` seta, `R` retângulo, `T` texto, `V` seleção, `Ctrl+Z`/`Ctrl+Y` (e `Ctrl+Shift+Z`), `Ctrl+C`, `Ctrl+S`, `Esc` (se estiver digitando texto, só fecha a caixa).
   - Copiar/salvar agora expõem `Bitmap ComposeResult()` → `ImageComposer.Compose(...)`.
   - Ao fechar, gravar a cor e a espessura usadas em `settings.LastColor`/`LastThickness`.
+- Nota da implementação: a propriedade pública é `bool StrokeStyleChanged` (mesmo motivo do CS0108). Com uma ferramenta de desenho ativa, o duplo clique não copia (seria parte do desenho) e clicar fora da seleção não inicia outra; as alças continuam redimensionando. As barras somem durante o arrasto/redimensionamento e reaparecem reposicionadas ao soltar. O tamanho do texto acompanha a espessura (`12 + 3 × espessura` px).
 
 ### `src/Fragmo/Capture/CaptureWorkflow.cs`
-- Action: Modify
+- Action: Modify [x]
 - Instruction: Trocar o `Crop` direto por `overlay.ComposeResult()` (para incluir as anotações) e salvar as configurações também quando a cor/espessura mudarem.
 
 ### `src/Fragmo/Strings.cs`
-- Action: Modify
+- Action: Modify [x]
 - Instruction: Acrescentar os nomes/dicas das ferramentas e ações (`ToolPen = "Caneta (P)"`, etc.).
 
 ### `tests/Fragmo.Tests/AnnotationHistoryTests.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: Usar uma anotação falsa (`FakeAnnotation : IAnnotation`). Casos: `Add` aumenta `Items`; `Undo`/`Redo` em sequência; `Add` depois de `Undo` limpa o refazer; `Undo` com lista vazia devolve `false`; `Changed` disparado uma vez por operação.
 
 ### `tests/Fragmo.Tests/ImageComposerTests.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: Bitmap base 100×100 branco + `RectangleAnnotation` vermelho; `Compose` com seleção `(10,10,50,50)` → resultado 50×50 e pixel vermelho na borda esperada; seleção fora do bitmap → `ArgumentException`.
 
 ### Git
-- Action: Create
+- Action: Create [x]
 - Instruction: commit `feat: editor com anotações e desfazer/refazer (fase 3)`.
 
 ### Verification
-- [ ] `dotnet test` verde.
+- [x] `dotnet build` sem avisos e `dotnet test` verde (75 testes).
 - [ ] Depois de selecionar, as duas barras aparecem junto da seleção e não saem da tela (testar seleção no canto inferior direito).
 - [ ] Caneta, linha, seta, retângulo e texto desenham dentro da seleção, na cor e espessura escolhidas; `Shift` trava ângulo/quadrado.
 - [ ] `Ctrl+Z`/`Ctrl+Y` desfazem e refazem; os botões ficam desativados quando não há o que desfazer.

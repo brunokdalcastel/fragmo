@@ -24,19 +24,31 @@ internal sealed class CaptureWorkflow(AppSettings settings, SettingsStore store,
 
             OverlayResult result;
             Rectangle selection;
+            bool styleChanged;
+            Bitmap? composed = null;
             using (var overlay = new SelectionOverlay(screen, settings))
             {
                 overlay.ShowDialog();
                 result = overlay.Result;
                 selection = overlay.Selection;
+                styleChanged = overlay.StrokeStyleChanged;
+                if (result != OverlayResult.Cancel && selection.Width > 0 && selection.Height > 0)
+                {
+                    // Inclui as anotações; precisa do overlay vivo (é ele que guarda o histórico).
+                    composed = overlay.ComposeResult();
+                }
             }
 
-            if (result == OverlayResult.Cancel || selection.Width <= 0 || selection.Height <= 0)
+            if (composed is null)
             {
+                if (styleChanged)
+                {
+                    store.Save(settings); // cor/espessura novas valem mesmo se cancelar
+                }
                 return;
             }
 
-            using var image = ScreenCapturer.Crop(screen.Image, selection);
+            using var image = composed;
             if (result == OverlayResult.Copy)
             {
                 output.CopyToClipboard(image);
