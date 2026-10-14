@@ -81,6 +81,25 @@ internal static class Strings
     public static string ActionClose => T("Fechar (Esc)", "Close (Esc)");
     public static string ActionPin => T("Fixar na tela (Ctrl+T)", "Pin to screen (Ctrl+T)");
     public static string ActionPrint => T("Imprimir (Ctrl+P)", "Print (Ctrl+P)");
+    public static string ActionCopyText => T("Copiar texto (O)", "Copy text (O)");
+
+    // Copiar texto (OCR).
+    public static string OcrOneLineCopied => T("1 linha copiada", "1 line copied");
+    public static string OcrLinesCopied => T("{0} linhas copiadas", "{0} lines copied");
+    public static string OcrNoText => T("Nenhum texto encontrado na seleção", "No text found in the selection");
+    public static string OcrFailed => T("Falha ao reconhecer o texto: {0}", "Text recognition failed: {0}");
+    public static string OcrNoLanguage => T(
+        "O Windows não tem nenhum idioma de reconhecimento de texto (OCR) instalado.\n\n" +
+        "Para instalar: Configurações › Hora e idioma › Idioma e região › clique em \"…\" ao lado do idioma › " +
+        "Opções de idioma › em \"Reconhecimento óptico de caracteres\", clique em Baixar.\n\n" +
+        "O reconhecimento roda no próprio computador; nada é enviado para a internet.",
+        "Windows has no text recognition (OCR) language installed.\n\n" +
+        "To install one: Settings › Time & language › Language & region › click \"…\" next to the language › " +
+        "Language options › under \"Optical character recognition\", click Download.\n\n" +
+        "Recognition runs on your computer; nothing is sent to the internet.");
+
+    public static string LinesCopied(int count) =>
+        count == 1 ? OcrOneLineCopied : string.Format(OcrLinesCopied, count);
 
     // Janela fixada: menu de contexto.
     public static string PinCopy => T("Copiar", "Copy");

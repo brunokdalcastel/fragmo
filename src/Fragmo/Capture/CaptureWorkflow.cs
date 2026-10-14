@@ -1,3 +1,4 @@
+using Fragmo.Ocr;
 using Fragmo.Output;
 using Fragmo.Overlay;
 using Fragmo.Pin;
@@ -84,6 +85,7 @@ internal sealed class CaptureWorkflow(AppSettings settings, SettingsStore store,
         Rectangle selection;
         bool styleChanged;
         Bitmap? composed = null;
+        Bitmap? ocrSource = null;
         using (var overlay = new SelectionOverlay(screen, settings, initialSelection))
         {
             overlay.ShowDialog();
@@ -92,9 +94,26 @@ internal sealed class CaptureWorkflow(AppSettings settings, SettingsStore store,
             styleChanged = overlay.StrokeStyleChanged;
             if (result != OverlayResult.Cancel && selection.Width > 0 && selection.Height > 0)
             {
-                // Inclui as anotações; precisa do overlay vivo (é ele que guarda o histórico).
-                composed = overlay.ComposeResult();
+                // O OCR lê a captura sem anotações; as outras saídas incluem as anotações
+                // e precisam do overlay vivo (é ele que guarda o histórico).
+                if (result == OverlayResult.CopyText)
+                {
+                    ocrSource = overlay.CropSelection();
+                }
+                else
+                {
+                    composed = overlay.ComposeResult();
+                }
             }
+        }
+
+        Rectangle region = CoordinateMapper.BitmapToScreen(selection, screen.VirtualBounds);
+        if (ocrSource is not null)
+        {
+            settings.LastRegion = new RegionDto(region.X, region.Y, region.Width, region.Height);
+            store.Save(settings);
+            _ = CopyTextAsync(ocrSource);
+            return;
         }
 
         if (composed is null)
@@ -106,7 +125,6 @@ internal sealed class CaptureWorkflow(AppSettings settings, SettingsStore store,
             return;
         }
 
-        Rectangle region = CoordinateMapper.BitmapToScreen(selection, screen.VirtualBounds);
         if (result == OverlayResult.Pin)
         {
             // A janela fixada passa a ser dona da imagem.
@@ -137,5 +155,35 @@ internal sealed class CaptureWorkflow(AppSettings settings, SettingsStore store,
 
         settings.LastRegion = new RegionDto(region.X, region.Y, region.Width, region.Height);
         store.Save(settings);
+    }
+
+    /// <summary>Reconhece o texto da imagem, copia e avisa na bandeja. Fica com a posse da imagem.</summary>
+    private async Task CopyTextAsync(Bitmap image)
+    {
+        try
+        {
+            OcrText? text;
+            using (image)
+            {
+                text = await OcrService.RecognizeAsync(image);
+            }
+
+            if (text is null)
+            {
+                MessageBox.Show(Strings.OcrNoLanguage, Strings.AppName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            if (text.Lines.Count == 0)
+            {
+                tray.ShowInfo(Strings.OcrNoText);
+                return;
+            }
+            output.CopyText(text.FullText);
+            tray.ShowInfo(Strings.LinesCopied(text.Lines.Count));
+        }
+        catch (Exception ex)
+        {
+            tray.ShowError(string.Format(Strings.OcrFailed, ex.Message));
+        }
     }
 }

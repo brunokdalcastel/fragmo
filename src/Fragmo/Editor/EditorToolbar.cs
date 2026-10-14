@@ -5,7 +5,7 @@ namespace Fragmo.Editor;
 
 /// <summary>
 /// Barra única do editor, horizontal e flutuante, desenhada à mão com o <see cref="Theme"/>:
-/// [tamanho da seleção] | ferramentas | cor e espessura | desfazer, refazer | fixar, imprimir, copiar, salvar, fechar.
+/// [tamanho da seleção] | ferramentas | cor e espessura | desfazer, refazer | fixar, imprimir, copiar, copiar texto, salvar, fechar.
 /// </summary>
 internal sealed class EditorToolbar : Control
 {
@@ -33,7 +33,7 @@ internal sealed class EditorToolbar : Control
     private enum ButtonId
     {
         Pen, Line, Arrow, Rectangle, Marker, Text, Step, Blur, Color, Thickness,
-        Undo, Redo, Pin, Print, Copy, Save, Close,
+        Undo, Redo, Pin, Print, Copy, CopyText, Save, Close,
     }
 
     // null = separador entre grupos.
@@ -43,7 +43,7 @@ internal sealed class EditorToolbar : Control
         ButtonId.Step, ButtonId.Blur, null,
         ButtonId.Color, ButtonId.Thickness, null,
         ButtonId.Undo, ButtonId.Redo, null,
-        ButtonId.Pin, ButtonId.Print, ButtonId.Copy, ButtonId.Save, ButtonId.Close,
+        ButtonId.Pin, ButtonId.Print, ButtonId.Copy, ButtonId.CopyText, ButtonId.Save, ButtonId.Close,
     ];
 
     private sealed record Item(ButtonId Id, Rectangle Bounds);
@@ -93,6 +93,7 @@ internal sealed class EditorToolbar : Control
     public event Action? PinClicked;
     public event Action? PrintClicked;
     public event Action? CopyClicked;
+    public event Action? CopyTextClicked;
     public event Action? SaveClicked;
     public event Action? CloseClicked;
 
@@ -190,6 +191,7 @@ internal sealed class EditorToolbar : Control
         ButtonId.Pin => Strings.ActionPin,
         ButtonId.Print => Strings.ActionPrint,
         ButtonId.Copy => Strings.ActionCopy,
+        ButtonId.CopyText => Strings.ActionCopyText,
         ButtonId.Save => Strings.ActionSave,
         _ => Strings.ActionClose,
     };
@@ -291,6 +293,9 @@ internal sealed class EditorToolbar : Control
                 break;
             case ButtonId.Copy:
                 CopyClicked?.Invoke();
+                break;
+            case ButtonId.CopyText:
+                CopyTextClicked?.Invoke();
                 break;
             case ButtonId.Save:
                 SaveClicked?.Invoke();
@@ -586,6 +591,17 @@ internal sealed class EditorToolbar : Control
                     g.DrawRectangle(thin, l + 5, t + 1, 10, 10);
                     g.FillRectangle(cover, l + 1, t + 5, 10, 10);
                     g.DrawRectangle(thin, l + 1, t + 5, 10, 10);
+                }
+                break;
+
+            case ButtonId.CopyText:
+                // Folha com linhas de texto.
+                using (var thin = new Pen(fore, 1.5f))
+                {
+                    g.DrawRectangle(thin, l + 1, t, r.Width - 2, r.Height);
+                    g.DrawLine(thin, l + 4, t + 4, rt - 4, t + 4);
+                    g.DrawLine(thin, l + 4, t + 8, rt - 4, t + 8);
+                    g.DrawLine(thin, l + 4, t + 12, rt - 7, t + 12);
                 }
                 break;
 

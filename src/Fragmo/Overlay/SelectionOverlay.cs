@@ -8,7 +8,7 @@ using Grip = Fragmo.Overlay.SelectionGeometry.Handle;
 
 namespace Fragmo.Overlay;
 
-internal enum OverlayResult { Cancel, Copy, Save, Pin, Print }
+internal enum OverlayResult { Cancel, Copy, Save, Pin, Print, CopyText }
 
 /// <summary>
 /// Janela de tela cheia sobre a tela congelada, onde o usuário escolhe a área a capturar.
@@ -117,6 +117,9 @@ internal sealed class SelectionOverlay : Form
         !string.Equals(ToHex(_style.Color), _initialColor, StringComparison.OrdinalIgnoreCase) ||
         _style.Thickness != _initialThickness;
 
+    /// <summary>A área selecionada como foi capturada, sem anotações (para o OCR).</summary>
+    public Bitmap CropSelection() => ScreenCapturer.Crop(_screen.Image, _selection);
+
     /// <summary>Imagem final: área selecionada com as anotações, sem véu, borda nem barras.</summary>
     public Bitmap ComposeResult() => ImageComposer.Compose(_screen.Image, _history.Items, _selection);
 
@@ -220,6 +223,9 @@ internal sealed class SelectionOverlay : Form
                 return true;
             case Keys.Control | Keys.P:
                 Finish(OverlayResult.Print);
+                return true;
+            case Keys.O when !_drawing:
+                Finish(OverlayResult.CopyText);
                 return true;
             case Keys.Control | Keys.Z:
                 if (!_drawing) _history.Undo();
@@ -652,6 +658,7 @@ internal sealed class SelectionOverlay : Form
             _toolbar.PinClicked += () => Finish(OverlayResult.Pin);
             _toolbar.PrintClicked += () => Finish(OverlayResult.Print);
             _toolbar.CopyClicked += () => Finish(OverlayResult.Copy);
+            _toolbar.CopyTextClicked += () => Finish(OverlayResult.CopyText);
             _toolbar.SaveClicked += () => Finish(OverlayResult.Save);
             _toolbar.CloseClicked += () => Finish(OverlayResult.Cancel);
             Controls.Add(_toolbar);

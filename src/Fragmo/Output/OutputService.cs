@@ -29,6 +29,22 @@ internal sealed class OutputService(AppSettings settings)
         }
     }
 
+    public void CopyText(string text)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            try
+            {
+                Clipboard.SetText(text);
+                return;
+            }
+            catch (ExternalException) when (attempt < ClipboardAttempts)
+            {
+                Thread.Sleep(ClipboardRetryDelayMs);
+            }
+        }
+    }
+
     public string? Save(Bitmap img, IWin32Window? owner)
     {
         if (!settings.AskWhereToSave)
