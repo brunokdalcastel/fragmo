@@ -337,3 +337,21 @@ public sealed class StepAnnotation(Color color, int number, Point center, int ra
         g.FillPath(Brushes.White, path);
     }
 }
+
+/// <summary>Várias anotações que entram e saem do histórico juntas (uma etapa de desfazer).</summary>
+public sealed class AnnotationGroup(IReadOnlyList<IAnnotation> items) : IAnnotation
+{
+    public IReadOnlyList<IAnnotation> Items { get; } = items;
+
+    public Rectangle Bounds => Items.Count == 0
+        ? Rectangle.Empty
+        : Items.Skip(1).Aggregate(Items[0].Bounds, (acc, item) => Rectangle.Union(acc, item.Bounds));
+
+    public void Draw(Graphics g, Bitmap source)
+    {
+        foreach (IAnnotation item in Items)
+        {
+            item.Draw(g, source);
+        }
+    }
+}

@@ -71,6 +71,7 @@ internal static class Strings
     public static string ToolMarker => T("Marcador (M)", "Highlighter (M)");
     public static string ToolBlur => T("Desfoque (B)", "Blur (B)");
     public static string ToolStep => T("Passos numerados (N)", "Numbered steps (N)");
+    public static string ToolAutoBlur => T("Desfoque automático de dados sensíveis (X)", "Auto-blur sensitive data (X)");
     public static string ToolColor => T("Cor", "Color");
     public static string ToolThickness => T("Espessura", "Thickness");
     public static string MoreColors => T("Mais cores…", "More colors…");
@@ -97,6 +98,16 @@ internal static class Strings
         "To install one: Settings › Time & language › Language & region › click \"…\" next to the language › " +
         "Language options › under \"Optical character recognition\", click Download.\n\n" +
         "Recognition runs on your computer; nothing is sent to the internet.");
+
+    // Desfoque automático.
+    public static string AutoBlurNone => T("Nenhum dado sensível encontrado", "No sensitive data found");
+    public static string AutoBlurOne => T("1 item desfocado", "1 item blurred");
+    public static string AutoBlurMany => T("{0} itens desfocados", "{0} items blurred");
+    public static string AutoBlurOnCapture => T("Desfocar dados sensíveis automaticamente ao capturar",
+                                                "Automatically blur sensitive data when capturing");
+
+    public static string ItemsBlurred(int count) =>
+        count == 1 ? AutoBlurOne : string.Format(AutoBlurMany, count);
 
     public static string LinesCopied(int count) =>
         count == 1 ? OcrOneLineCopied : string.Format(OcrLinesCopied, count);

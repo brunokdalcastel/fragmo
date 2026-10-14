@@ -86,7 +86,7 @@ internal sealed class CaptureWorkflow(AppSettings settings, SettingsStore store,
         bool styleChanged;
         Bitmap? composed = null;
         Bitmap? ocrSource = null;
-        using (var overlay = new SelectionOverlay(screen, settings, initialSelection))
+        using (var overlay = new SelectionOverlay(screen, settings, initialSelection, tray.ShowInfo))
         {
             overlay.ShowDialog();
             result = overlay.Result;

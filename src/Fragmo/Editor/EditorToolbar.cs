@@ -32,7 +32,7 @@ internal sealed class EditorToolbar : Control
 
     private enum ButtonId
     {
-        Pen, Line, Arrow, Rectangle, Marker, Text, Step, Blur, Color, Thickness,
+        Pen, Line, Arrow, Rectangle, Marker, Text, Step, Blur, AutoBlur, Color, Thickness,
         Undo, Redo, Pin, Print, Copy, CopyText, Save, Close,
     }
 
@@ -40,7 +40,7 @@ internal sealed class EditorToolbar : Control
     private static readonly ButtonId?[] ButtonOrder =
     [
         ButtonId.Pen, ButtonId.Line, ButtonId.Arrow, ButtonId.Rectangle, ButtonId.Marker, ButtonId.Text,
-        ButtonId.Step, ButtonId.Blur, null,
+        ButtonId.Step, ButtonId.Blur, ButtonId.AutoBlur, null,
         ButtonId.Color, ButtonId.Thickness, null,
         ButtonId.Undo, ButtonId.Redo, null,
         ButtonId.Pin, ButtonId.Print, ButtonId.Copy, ButtonId.CopyText, ButtonId.Save, ButtonId.Close,
@@ -94,6 +94,7 @@ internal sealed class EditorToolbar : Control
     public event Action? PrintClicked;
     public event Action? CopyClicked;
     public event Action? CopyTextClicked;
+    public event Action? AutoBlurClicked;
     public event Action? SaveClicked;
     public event Action? CloseClicked;
 
@@ -179,6 +180,7 @@ internal sealed class EditorToolbar : Control
         ButtonId.Pen => Strings.ToolPen,
         ButtonId.Marker => Strings.ToolMarker,
         ButtonId.Blur => Strings.ToolBlur,
+        ButtonId.AutoBlur => Strings.ToolAutoBlur,
         ButtonId.Step => Strings.ToolStep,
         ButtonId.Line => Strings.ToolLine,
         ButtonId.Arrow => Strings.ToolArrow,
@@ -296,6 +298,9 @@ internal sealed class EditorToolbar : Control
                 break;
             case ButtonId.CopyText:
                 CopyTextClicked?.Invoke();
+                break;
+            case ButtonId.AutoBlur:
+                AutoBlurClicked?.Invoke();
                 break;
             case ButtonId.Save:
                 SaveClicked?.Invoke();
@@ -509,6 +514,29 @@ internal sealed class EditorToolbar : Control
                 {
                     g.DrawRectangle(thin, l, t, cell * 4 - 1, cell * 4 - 1);
                 }
+                break;
+            }
+
+            case ButtonId.AutoBlur:
+            {
+                // Quadriculado menor no canto e uma faísca: o desfoque que se aplica sozinho.
+                int cell = r.Width / 5;
+                for (int row = 0; row < 3; row++)
+                {
+                    for (int col = 0; col < 3; col++)
+                    {
+                        if ((row + col) % 2 == 0)
+                        {
+                            g.FillRectangle(brush, l + col * cell, b - (3 - row) * cell, cell, cell);
+                        }
+                    }
+                }
+                float sx = rt - 4f, sy = t + 4f;
+                g.FillPolygon(brush, new PointF[]
+                {
+                    new(sx, sy - 4.5f), new(sx + 1.3f, sy - 1.3f), new(sx + 4.5f, sy), new(sx + 1.3f, sy + 1.3f),
+                    new(sx, sy + 4.5f), new(sx - 1.3f, sy + 1.3f), new(sx - 4.5f, sy), new(sx - 1.3f, sy - 1.3f),
+                });
                 break;
             }
 

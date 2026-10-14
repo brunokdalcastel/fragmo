@@ -2,6 +2,7 @@ using System.Drawing.Drawing2D;
 using Fragmo.Capture;
 using Fragmo.Editor;
 using Fragmo.Native;
+using Fragmo.Ocr;
 using Fragmo.Settings;
 using Fragmo.Ui;
 using Grip = Fragmo.Overlay.SelectionGeometry.Handle;
@@ -28,6 +29,7 @@ internal sealed class SelectionOverlay : Form
     private const int DirtyMargin = 4;
     private const int MaxThickness = 20;
     private const int MinTextBoxWidth = 40;
+    private const int AutoBlurPadding = 3;
 
     // Borda, alças e lupa ficam sobre o véu escuro: usa o tom claro do destaque.
     private static readonly Color Accent = Palette.AccentLight;
@@ -44,6 +46,7 @@ internal sealed class SelectionOverlay : Form
     private readonly Pen _accentPen = new(Accent, 1);
     private readonly Theme _theme;
     private readonly AnnotationHistory _history = new();
+    private readonly Action<string>? _notify;
     private readonly string _initialColor;
     private readonly int _initialThickness;
 
@@ -66,16 +69,20 @@ internal sealed class SelectionOverlay : Form
     private TextBox? _textBox; // criada uma vez e reaproveitada; é descartada junto com o form
     private Font? _textFont;
     private bool _editingText;
+    private bool _autoBlurRunning;
     private Point _textOrigin;
 
     /// <param name="initialSelection">
     /// Área já escolhida (em coordenadas do bitmap), usada por "repetir última área" e "janela ativa":
     /// o overlay abre direto no editor.
     /// </param>
-    public SelectionOverlay(CapturedScreen screen, AppSettings settings, Rectangle? initialSelection = null)
+    /// <param name="notify">Avisos curtos para a bandeja (ex.: quantos itens o desfoque automático cobriu).</param>
+    public SelectionOverlay(CapturedScreen screen, AppSettings settings, Rectangle? initialSelection = null,
+        Action<string>? notify = null)
     {
         _screen = screen;
         _settings = settings;
+        _notify = notify;
         _theme = Theme.Resolve(settings.Theme);
         _initialColor = settings.LastColor;
         _initialThickness = settings.LastThickness;
@@ -150,6 +157,7 @@ internal sealed class SelectionOverlay : Form
         {
             ShowToolbar();
             UpdateCursor(_cursor);
+            AutoBlurIfEnabled();
         }
         Activate();
         Focus();
@@ -226,6 +234,9 @@ internal sealed class SelectionOverlay : Form
                 return true;
             case Keys.O when !_drawing:
                 Finish(OverlayResult.CopyText);
+                return true;
+            case Keys.X when !_drawing:
+                _ = AutoBlurAsync(automatic: false);
                 return true;
             case Keys.Control | Keys.Z:
                 if (!_drawing) _history.Undo();
@@ -378,6 +389,7 @@ internal sealed class SelectionOverlay : Form
             UpdateCursor(e.Location);
             UpdateDirty();
             ShowToolbar();
+            AutoBlurIfEnabled();
         }
         else
         {
@@ -642,6 +654,107 @@ internal sealed class SelectionOverlay : Form
         }
     }
 
+    // ----- Desfoque automático -----
+
+    private void AutoBlurIfEnabled()
+    {
+        if (_settings.AutoBlurOnCapture)
+        {
+            _ = AutoBlurAsync(automatic: true);
+        }
+    }
+
+    /// <summary>
+    /// Lê o texto da seleção com o OCR do Windows e desfoca os dados sensíveis encontrados, todos numa
+    /// única etapa de desfazer. Partes já desfocadas não são desfocadas de novo (vale ao redimensionar).
+    /// </summary>
+    private async Task AutoBlurAsync(bool automatic)
+    {
+        if (_autoBlurRunning || !HasSelection || _state != State.Selected)
+        {
+            return;
+        }
+
+        _autoBlurRunning = true;
+        UseWaitCursor = true;
+        try
+        {
+            Rectangle area = _selection;
+            OcrText? text;
+            using (Bitmap crop = ScreenCapturer.Crop(_screen.Image, area))
+            {
+                text = await OcrService.RecognizeAsync(crop);
+            }
+            if (IsDisposed || !Visible)
+            {
+                return; // o editor fechou enquanto o OCR rodava
+            }
+
+            if (text is null)
+            {
+                if (!automatic)
+                {
+                    MessageBox.Show(this, Strings.OcrNoLanguage, Strings.AppName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                return;
+            }
+
+            List<Rectangle> targets = SensitiveDataDetector.Detect(text.Lines)
+                .Select(r =>
+                {
+                    r.Offset(area.Location);
+                    return Rectangle.Intersect(Rectangle.Inflate(r, AutoBlurPadding, AutoBlurPadding), area);
+                })
+                .Where(r => !r.IsEmpty && !AlreadyBlurred(r))
+                .ToList();
+
+            if (targets.Count == 0)
+            {
+                if (!automatic)
+                {
+                    _notify?.Invoke(Strings.AutoBlurNone);
+                }
+                return;
+            }
+
+            CloseTextBox(commit: true);
+            _history.Add(new AnnotationGroup(targets.Select(r => (IAnnotation)new BlurAnnotation(r)).ToList()));
+            _notify?.Invoke(Strings.ItemsBlurred(targets.Count));
+        }
+        catch (Exception ex)
+        {
+            _notify?.Invoke(string.Format(Strings.OcrFailed, ex.Message));
+        }
+        finally
+        {
+            _autoBlurRunning = false;
+            if (!IsDisposed)
+            {
+                UseWaitCursor = false;
+            }
+        }
+    }
+
+    private bool AlreadyBlurred(Rectangle r) => BlurredAreas(_history.Items).Any(b => b.Contains(r));
+
+    private static IEnumerable<Rectangle> BlurredAreas(IEnumerable<IAnnotation> items)
+    {
+        foreach (IAnnotation item in items)
+        {
+            if (item is BlurAnnotation blur)
+            {
+                yield return blur.Rect;
+            }
+            else if (item is AnnotationGroup group)
+            {
+                foreach (Rectangle inner in BlurredAreas(group.Items))
+                {
+                    yield return inner;
+                }
+            }
+        }
+    }
+
     // ----- Barra de ferramentas -----
 
     private void ShowToolbar()
@@ -659,6 +772,7 @@ internal sealed class SelectionOverlay : Form
             _toolbar.PrintClicked += () => Finish(OverlayResult.Print);
             _toolbar.CopyClicked += () => Finish(OverlayResult.Copy);
             _toolbar.CopyTextClicked += () => Finish(OverlayResult.CopyText);
+            _toolbar.AutoBlurClicked += () => _ = AutoBlurAsync(automatic: false);
             _toolbar.SaveClicked += () => Finish(OverlayResult.Save);
             _toolbar.CloseClicked += () => Finish(OverlayResult.Cancel);
             Controls.Add(_toolbar);
