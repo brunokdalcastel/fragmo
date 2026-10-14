@@ -185,3 +185,9 @@ installed). The EXE is not digitally signed.
 Fragmo never touches the network and has no telemetry. Captures and settings stay on your computer
 (`%USERPROFILE%\Pictures\Fragmo` and `%APPDATA%\Fragmo`). "Start with Windows" only writes the `Fragmo`
 value under `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`.
+
+---
+
+## Licença / License
+
+[MIT](LICENSE) © 2026 Bruno K. Dal Castel
