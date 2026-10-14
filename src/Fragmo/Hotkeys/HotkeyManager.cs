@@ -37,6 +37,16 @@ internal sealed class HotkeyManager : NativeWindow, IDisposable
         return true;
     }
 
+    /// <summary>Libera todos os atalhos, para registrar de novo (ex.: depois de trocar nas configurações).</summary>
+    public void UnregisterAll()
+    {
+        foreach (int id in _registered)
+        {
+            User32.UnregisterHotKey(Handle, id);
+        }
+        _registered.Clear();
+    }
+
     protected override void WndProc(ref Message m)
     {
         if (m.Msg == User32.WM_HOTKEY)
@@ -53,11 +63,7 @@ internal sealed class HotkeyManager : NativeWindow, IDisposable
 
     public void Dispose()
     {
-        foreach (int id in _registered)
-        {
-            User32.UnregisterHotKey(Handle, id);
-        }
-        _registered.Clear();
+        UnregisterAll();
         DestroyHandle();
     }
 }

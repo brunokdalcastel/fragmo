@@ -587,18 +587,29 @@ public sealed record StrokeStyle(Color Color, int Thickness);
 - Action: Create
 - Instruction: `public static class SettingsValidator` com `IReadOnlyList<string> Validate(AppSettings s)` (mensagens de `Strings`), usado pelo `SettingsForm` antes de salvar.
 
+### `src/Fragmo/Hotkeys/HotkeyManager.cs` *(acrescentado na implementação)*
+- Action: Modify
+- Instruction: `UnregisterAll()`, para `RegisterAllHotkeys()` liberar tudo antes de registrar (trocar atalhos entre ações não colide) e para suspender os atalhos enquanto uma `HotkeyBox` tem o foco (senão o atalho registrado, ex. `PrintScreen`, dispara a captura em vez de chegar na caixa). A `SettingsForm` avisa por `event Action<bool> CapturingHotkeyChanged`.
+
+### Notas da implementação
+- Atalho vazio conta como inválido no `SettingsValidator` (o `SettingsStore.Normalize` trocaria o vazio pelo padrão ao carregar).
+- O atalho alternativo da área (`Ctrl+Shift+S`) não aparece na tela; só entra quando o principal falha.
+- Com atalho recusado pelo Windows, o OK salva, marca em vermelho e deixa a tela aberta; um segundo OK sem mudança fecha.
+- Depois do OK, a tela é reaberta se o idioma **ou o tema** mudou.
+- `--tray` também cala o aviso "já está aberto".
+
 ### Git
 - Action: Create
 - Instruction: commit `feat: tela de configurações, ícone e publicação (fase 5)`.
 
 ### Verification
-- [ ] `dotnet test` verde.
+- [x] `dotnet build` sem avisos e `dotnet test` verde (91 testes).
 - [ ] Trocar o atalho de área para `Ctrl+Alt+A` nas configurações funciona na hora, sem reiniciar; um atalho repetido é recusado.
-- [ ] "Iniciar com o Windows" cria/remove o valor em `HKCU\...\Run` (conferir no `regedit`) e o app abre na bandeja depois de reiniciar.
+- [ ] "Iniciar com o Windows" cria/remove o valor em `HKCU\...\Run` (conferir no `regedit`) e o app abre na bandeja depois de reiniciar. *(criar/remover o valor conferido por teste descartável; falta reiniciar)*
 - [ ] Trocar para JPEG + qualidade 70 gera `.jpg` com o nome da prévia.
 - [ ] Tema Escuro/Claro/Sistema muda as barras e a tela de configurações.
 - [ ] Trocar o idioma para English muda o menu da bandeja, a tela de configurações e as dicas do editor sem reiniciar o app.
-- [ ] `./publish.ps1` gera um único `artifacts/publish/Fragmo.exe` com o ícone laranja, que roda numa pasta qualquer sem o .NET instalado.
+- [x] `./publish.ps1` gera um único `artifacts/publish/Fragmo.exe` (49 MB) com o ícone laranja. *(rodar numa máquina sem .NET: não testado)*
 - [ ] Monitor de rede (ex.: `Resource Monitor`) não mostra nenhuma conexão do `Fragmo.exe`.
 
 ---

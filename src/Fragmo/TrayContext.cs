@@ -19,13 +19,16 @@ internal sealed class TrayContext : ApplicationContext
     private readonly SettingsStore _store;
     private readonly AppSettings _settings;
     private readonly NotifyIcon _notifyIcon;
-    private readonly ContextMenuStrip _menu;
+    private ContextMenuStrip _menu;
     private readonly Icon _icon;
     private readonly HotkeyManager _hotkeys;
     private readonly CaptureWorkflow _workflow;
     private readonly List<PinWindow> _pins = [];
+    private SettingsForm? _settingsForm;
+    private bool _areaUsesFallback;
 
-    public TrayContext(SettingsStore store, AppSettings settings)
+    /// <param name="quiet">Modo <c>--tray</c> (iniciar com o Windows): não mostra avisos na abertura.</param>
+    public TrayContext(SettingsStore store, AppSettings settings, bool quiet)
     {
         _store = store;
         _settings = settings;
@@ -43,8 +46,11 @@ internal sealed class TrayContext : ApplicationContext
         _notifyIcon.DoubleClick += (_, _) => _workflow.CaptureArea();
         _hotkeys = new HotkeyManager();
         _hotkeys.Pressed += OnHotkeyPressed;
-        RegisterCaptureAreaHotkey();
-        RegisterOtherHotkeys();
+        IReadOnlyList<HotkeyAction> failed = RegisterAllHotkeys();
+        if (!quiet)
+        {
+            ReportHotkeyFailures(failed);
+        }
     }
 
     public void ShowInfo(string text) =>
@@ -53,44 +59,53 @@ internal sealed class TrayContext : ApplicationContext
     public void ShowError(string text) =>
         _notifyIcon.ShowBalloonTip(4000, Strings.AppName, text, ToolTipIcon.Error);
 
-    private void RegisterCaptureAreaHotkey()
+    /// <summary>
+    /// Libera e registra de novo todos os atalhos. Devolve as ações cujo atalho o Windows recusou; se o de área
+    /// falhar, tenta o alternativo (<see cref="HotkeySettings.CaptureAreaFallback"/>) por último.
+    /// </summary>
+    private IReadOnlyList<HotkeyAction> RegisterAllHotkeys()
     {
-        if (TryRegister(HotkeyAction.CaptureArea, _settings.Hotkeys.CaptureArea))
-        {
-            return;
-        }
+        _hotkeys.UnregisterAll();
+        _areaUsesFallback = false;
 
-        if (TryRegister(HotkeyAction.CaptureArea, _settings.Hotkeys.CaptureAreaFallback))
-        {
-            ShowInfo(Strings.PrintScreenTaken);
-            return;
-        }
-
-        ShowError(Strings.HotkeyFailed);
-    }
-
-    /// <summary>Registra tela cheia, janela ativa e repetir; avisa por balão os que falharem.</summary>
-    private void RegisterOtherHotkeys()
-    {
-        (HotkeyAction Action, string Text)[] hotkeys =
-        [
-            (HotkeyAction.CaptureFullScreen, _settings.Hotkeys.CaptureFullScreen),
-            (HotkeyAction.CaptureWindow, _settings.Hotkeys.CaptureWindow),
-            (HotkeyAction.RepeatLastArea, _settings.Hotkeys.RepeatLastArea),
-        ];
-
-        List<string> failed = [];
-        foreach ((HotkeyAction action, string text) in hotkeys)
+        List<HotkeyAction> failed = [];
+        foreach ((HotkeyAction action, string text) in SettingsValidator.HotkeyEntries(_settings.Hotkeys))
         {
             if (!string.IsNullOrWhiteSpace(text) && !TryRegister(action, text))
             {
-                failed.Add(text);
+                failed.Add(action);
             }
         }
 
-        if (failed.Count > 0)
+        if (failed.Contains(HotkeyAction.CaptureArea))
         {
-            ShowError(string.Format(Strings.HotkeysInUse, string.Join(", ", failed)));
+            _areaUsesFallback = TryRegister(HotkeyAction.CaptureArea, _settings.Hotkeys.CaptureAreaFallback);
+        }
+        return failed;
+    }
+
+    /// <summary>Avisa por balão os atalhos que falharam na abertura do app.</summary>
+    private void ReportHotkeyFailures(IReadOnlyList<HotkeyAction> failed)
+    {
+        if (failed.Contains(HotkeyAction.CaptureArea))
+        {
+            if (_areaUsesFallback)
+            {
+                ShowInfo(Strings.PrintScreenTaken);
+            }
+            else
+            {
+                ShowError(Strings.HotkeyFailed);
+            }
+        }
+
+        string[] others = SettingsValidator.HotkeyEntries(_settings.Hotkeys)
+            .Where(e => e.Action != HotkeyAction.CaptureArea && failed.Contains(e.Action))
+            .Select(e => e.Text)
+            .ToArray();
+        if (others.Length > 0)
+        {
+            ShowError(string.Format(Strings.HotkeysInUse, string.Join(", ", others)));
         }
     }
 
@@ -162,8 +177,58 @@ internal sealed class TrayContext : ApplicationContext
 
     private void OpenCapturesFolder() => OpenInExplorer(_settings.SaveFolder);
 
-    // Nesta fase "Configurações…" só abre a pasta onde fica o settings.json.
-    private void OpenSettings() => OpenInExplorer(_store.Directory);
+    /// <summary>Abre a tela de configurações (uma só; se já estiver aberta, traz para a frente).</summary>
+    private void OpenSettings()
+    {
+        if (_settingsForm is not null)
+        {
+            _settingsForm.Activate();
+            return;
+        }
+
+        var form = new SettingsForm(_settings, _store);
+        form.Applied += () => OnSettingsApplied(form);
+        // Enquanto uma caixa de atalho tem o foco, os atalhos globais saem do caminho para a tecla chegar nela.
+        form.CapturingHotkeyChanged += capturing =>
+        {
+            if (capturing)
+            {
+                _hotkeys.UnregisterAll();
+            }
+            else
+            {
+                RegisterAllHotkeys();
+            }
+        };
+        form.FormClosed += (_, _) =>
+        {
+            _settingsForm = null;
+            if (form.DialogResult == DialogResult.OK && form.ReopenRequested)
+            {
+                OpenSettings();
+            }
+        };
+        _settingsForm = form;
+        form.Show();
+        form.Activate();
+    }
+
+    private void OnSettingsApplied(SettingsForm form)
+    {
+        Strings.Apply(_settings.Language);
+        RebuildMenu();
+        form.ShowHotkeyFailures(RegisterAllHotkeys());
+    }
+
+    /// <summary>Recria o menu da bandeja, para os textos seguirem o idioma atual.</summary>
+    private void RebuildMenu()
+    {
+        ContextMenuStrip old = _menu;
+        _menu = BuildMenu();
+        _notifyIcon.ContextMenuStrip = _menu;
+        _notifyIcon.Text = Strings.TrayTooltip;
+        old.Dispose();
+    }
 
     private void OpenInExplorer(string folder)
     {
@@ -184,6 +249,7 @@ internal sealed class TrayContext : ApplicationContext
     protected override void ExitThreadCore()
     {
         CloseAllPins();
+        _settingsForm?.Close();
         _hotkeys.Dispose();
         _notifyIcon.Visible = false;
         _notifyIcon.Dispose();

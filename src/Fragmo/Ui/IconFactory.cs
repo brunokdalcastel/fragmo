@@ -30,6 +30,51 @@ internal static class IconFactory
         }
     }
 
+    /// <summary>Grava um <c>.ico</c> com um PNG por tamanho (ICONDIR + ICONDIRENTRY + bytes de cada PNG).</summary>
+    public static void SaveIco(string path, params int[] sizes)
+    {
+        var images = new List<byte[]>(sizes.Length);
+        foreach (int size in sizes)
+        {
+            using var bmp = new Bitmap(size, size, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            using (var g = Graphics.FromImage(bmp))
+            {
+                Draw(g, size);
+            }
+            using var png = new MemoryStream();
+            bmp.Save(png, System.Drawing.Imaging.ImageFormat.Png);
+            images.Add(png.ToArray());
+        }
+
+        const int HeaderSize = 6;
+        const int EntrySize = 16;
+        using var file = File.Create(path);
+        using var w = new BinaryWriter(file);
+        w.Write((ushort)0);            // reservado
+        w.Write((ushort)1);            // tipo: ícone
+        w.Write((ushort)sizes.Length);
+
+        int offset = HeaderSize + EntrySize * sizes.Length;
+        for (int i = 0; i < sizes.Length; i++)
+        {
+            byte dim = sizes[i] >= 256 ? (byte)0 : (byte)sizes[i]; // 0 significa 256
+            w.Write(dim);                  // largura
+            w.Write(dim);                  // altura
+            w.Write((byte)0);              // cores na paleta
+            w.Write((byte)0);              // reservado
+            w.Write((ushort)1);            // planos
+            w.Write((ushort)32);           // bits por pixel
+            w.Write(images[i].Length);
+            w.Write(offset);
+            offset += images[i].Length;
+        }
+
+        foreach (byte[] image in images)
+        {
+            w.Write(image);
+        }
+    }
+
     private static void Draw(Graphics g, int size)
     {
         g.SmoothingMode = SmoothingMode.AntiAlias;

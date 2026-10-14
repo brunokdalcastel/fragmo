@@ -13,6 +13,16 @@
     <AssemblyName>Fragmo</AssemblyName>
     <Version>0.1.0</Version>
     <Product>Fragmo</Product>
+    <ApplicationIcon>Resources\fragmo.ico</ApplicationIcon>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+  <!-- Só ao publicar: um único EXE com o runtime embutido. Sem PublishTrimmed (WinForms não suporta trimming). -->
+  <PropertyGroup Condition="'$(_IsPublishing)' == 'true'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Fragmo.Tests" />

@@ -1,4 +1,5 @@
 using System.Globalization;
+using Fragmo.Hotkeys;
 using Fragmo.Settings;
 
 namespace Fragmo;
@@ -86,6 +87,48 @@ internal static class Strings
     public static string PinSave => T("Salvar…", "Save…");
     public static string PinClose => T("Fechar", "Close");
     public const string PinZoomReset = "Zoom 100%";
+
+    // Configurações.
+    public static string SettingsTitle => T("Configurações do Fragmo", "Fragmo settings");
+    public static string SectionHotkeys => T("Atalhos", "Hotkeys");
+    public static string SectionSave => T("Salvar", "Saving");
+    public static string SectionGeneral => T("Geral", "General");
+    public static string HotkeyHint => T("Clique na caixa e pressione o atalho. Backspace limpa.",
+                                         "Click a box and press the hotkey. Backspace clears it.");
+    public static string HotkeyTaken => T("em uso por outro programa", "in use by another program");
+    public static string LabelFolder => T("Pasta", "Folder");
+    public static string BrowseFolder => T("Escolher…", "Browse…");
+    public static string FolderDialogDescription => T("Pasta onde as capturas são salvas", "Folder where captures are saved");
+    public static string LabelFormat => T("Formato padrão", "Default format");
+    public static string LabelJpegQuality => T("Qualidade JPEG", "JPEG quality");
+    public static string LabelPrefix => T("Prefixo do nome", "File name prefix");
+    public static string FileNamePreview => T("Exemplo: {0}", "Example: {0}");
+    public static string AskWhereToSave => T("Perguntar onde salvar", "Ask where to save");
+    public static string StartWithWindows => T("Iniciar com o Windows", "Start with Windows");
+    public static string ShowMagnifier => T("Mostrar lupa", "Show magnifier");
+    public static string LabelTheme => T("Tema", "Theme");
+    public static string ThemeDark => T("Escuro", "Dark");
+    public static string ThemeLight => T("Claro", "Light");
+    public static string FollowWindows => T("Seguir o Windows", "Follow Windows");
+    public static string LabelLanguage => T("Idioma", "Language");
+    public static string ButtonCancel => T("Cancelar", "Cancel");
+    public static string ButtonDefaults => T("Restaurar padrões", "Restore defaults");
+    public const string ButtonOk = "OK";
+    public static string SettingsErrors => T("Corrija antes de salvar:\n\n{0}", "Please fix before saving:\n\n{0}");
+    public static string StartupError => T("Não foi possível alterar o início com o Windows: {0}",
+                                           "Could not change start with Windows: {0}");
+    public static string HotkeyInvalid => T("\"{0}\": atalho vazio ou inválido.", "\"{0}\": empty or invalid hotkey.");
+    public static string HotkeyDuplicate => T("O atalho {0} está repetido em \"{1}\" e \"{2}\".",
+                                              "The hotkey {0} is used by both \"{1}\" and \"{2}\".");
+    public static string FolderEmpty => T("Escolha uma pasta para salvar as capturas.", "Choose a folder to save captures in.");
+
+    public static string HotkeyLabel(HotkeyAction action) => action switch
+    {
+        HotkeyAction.CaptureFullScreen => MenuFullScreen,
+        HotkeyAction.CaptureWindow => MenuWindow,
+        HotkeyAction.RepeatLastArea => MenuRepeatLast,
+        _ => MenuCaptureArea,
+    };
 
     public static string UnexpectedError => T(
         "Ocorreu um erro inesperado. Detalhes gravados em {0}.\n\n{1}",

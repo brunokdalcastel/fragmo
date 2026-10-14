@@ -1,21 +1,44 @@
 using Fragmo.Settings;
+using Fragmo.Ui;
 
 namespace Fragmo;
 
 internal static class Program
 {
+    private static readonly int[] IconSizes = [16, 24, 32, 48, 256];
+
     [STAThread]
-    private static void Main()
+    private static int Main(string[] args)
     {
+        // --export-icon <caminho.ico>: grava o ícone do EXE e sai (não precisa de instância única).
+        int exportAt = Array.IndexOf(args, "--export-icon");
+        if (exportAt >= 0)
+        {
+            if (exportAt + 1 >= args.Length)
+            {
+                return 2;
+            }
+            string target = Path.GetFullPath(args[exportAt + 1]);
+            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+            IconFactory.SaveIco(target, IconSizes);
+            return 0;
+        }
+
+        // --tray: modo do "iniciar com o Windows", abre direto na bandeja sem nenhuma mensagem.
+        bool quiet = args.Contains("--tray");
+
         // O mutex é verificado antes de carregar as configurações, então a mensagem usa o idioma do Windows.
         Strings.Apply(UiLanguage.System);
 
         using var mutex = new Mutex(true, @"Local\Fragmo.SingleInstance", out bool created);
         if (!created)
         {
-            MessageBox.Show(Strings.AlreadyRunning, Strings.AppName,
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
-            return;
+            if (!quiet)
+            {
+                MessageBox.Show(Strings.AlreadyRunning, Strings.AppName,
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            return 0;
         }
 
         ApplicationConfiguration.Initialize();
@@ -29,7 +52,8 @@ internal static class Program
         var settings = store.Load();
         Strings.Apply(settings.Language);
 
-        Application.Run(new TrayContext(store, settings));
+        Application.Run(new TrayContext(store, settings, quiet));
+        return 0;
     }
 
     private static void ReportError(Exception ex)
