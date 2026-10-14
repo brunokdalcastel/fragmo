@@ -45,4 +45,16 @@ internal static partial class User32
     [LibraryImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool GetCursorPos(out POINT lpPoint);
+
+    [LibraryImport("user32.dll", EntryPoint = "GetClassNameW", SetLastError = true)]
+    private static unsafe partial int GetClassName(IntPtr hWnd, char* lpClassName, int nMaxCount);
+
+    /// <summary>Nome da classe da janela (vazio se falhar).</summary>
+    public static unsafe string GetClassName(IntPtr hWnd)
+    {
+        const int MaxLength = 256;
+        char* buffer = stackalloc char[MaxLength];
+        int length = GetClassName(hWnd, buffer, MaxLength);
+        return length > 0 ? new string(buffer, 0, length) : string.Empty;
+    }
 }

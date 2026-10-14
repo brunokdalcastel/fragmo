@@ -5,7 +5,7 @@ namespace Fragmo.Editor;
 
 /// <summary>
 /// Barra do editor desenhada à mão com o <see cref="Theme"/>. A vertical tem as ferramentas, a cor
-/// e a espessura; a horizontal tem desfazer/refazer e copiar/salvar/fechar.
+/// e a espessura; a horizontal tem desfazer/refazer e fixar/imprimir/copiar/salvar/fechar.
 /// </summary>
 internal sealed class EditorToolbar : Control
 {
@@ -27,7 +27,11 @@ internal sealed class EditorToolbar : Control
 
     private static readonly int[] Thicknesses = [1, 2, 3, 5, 8];
 
-    private enum ButtonId { Pen, Line, Arrow, Rectangle, Text, Color, Thickness, Undo, Redo, Copy, Save, Close }
+    private enum ButtonId
+    {
+        Pen, Marker, Line, Arrow, Rectangle, Blur, Step, Text, Color, Thickness,
+        Undo, Redo, Pin, Print, Copy, Save, Close,
+    }
 
     private sealed record Item(ButtonId Id, Rectangle Bounds);
 
@@ -61,9 +65,10 @@ internal sealed class EditorToolbar : Control
         BackColor = theme.Background;
 
         ButtonId?[] layout = orientation == Orientation.Vertical
-            ? [ButtonId.Pen, ButtonId.Line, ButtonId.Arrow, ButtonId.Rectangle, ButtonId.Text, null,
-               ButtonId.Color, ButtonId.Thickness]
-            : [ButtonId.Undo, ButtonId.Redo, null, ButtonId.Copy, ButtonId.Save, ButtonId.Close];
+            ? [ButtonId.Pen, ButtonId.Marker, ButtonId.Line, ButtonId.Arrow, ButtonId.Rectangle, ButtonId.Blur,
+               ButtonId.Step, ButtonId.Text, null, ButtonId.Color, ButtonId.Thickness]
+            : [ButtonId.Undo, ButtonId.Redo, null, ButtonId.Pin, ButtonId.Print, null,
+               ButtonId.Copy, ButtonId.Save, ButtonId.Close];
         BuildLayout(layout);
 
         _colorMenu = BuildColorMenu();
@@ -75,6 +80,8 @@ internal sealed class EditorToolbar : Control
     public event Action<StrokeStyle>? StrokeStyleChanged;
     public event Action? UndoClicked;
     public event Action? RedoClicked;
+    public event Action? PinClicked;
+    public event Action? PrintClicked;
     public event Action? CopyClicked;
     public event Action? SaveClicked;
     public event Action? CloseClicked;
@@ -133,6 +140,9 @@ internal sealed class EditorToolbar : Control
     private static ToolKind? ToolFor(ButtonId id) => id switch
     {
         ButtonId.Pen => ToolKind.Pen,
+        ButtonId.Marker => ToolKind.Marker,
+        ButtonId.Blur => ToolKind.Blur,
+        ButtonId.Step => ToolKind.Step,
         ButtonId.Line => ToolKind.Line,
         ButtonId.Arrow => ToolKind.Arrow,
         ButtonId.Rectangle => ToolKind.Rectangle,
@@ -143,6 +153,9 @@ internal sealed class EditorToolbar : Control
     private static string TooltipFor(ButtonId id) => id switch
     {
         ButtonId.Pen => Strings.ToolPen,
+        ButtonId.Marker => Strings.ToolMarker,
+        ButtonId.Blur => Strings.ToolBlur,
+        ButtonId.Step => Strings.ToolStep,
         ButtonId.Line => Strings.ToolLine,
         ButtonId.Arrow => Strings.ToolArrow,
         ButtonId.Rectangle => Strings.ToolRectangle,
@@ -151,6 +164,8 @@ internal sealed class EditorToolbar : Control
         ButtonId.Thickness => Strings.ToolThickness,
         ButtonId.Undo => Strings.ActionUndo,
         ButtonId.Redo => Strings.ActionRedo,
+        ButtonId.Pin => Strings.ActionPin,
+        ButtonId.Print => Strings.ActionPrint,
         ButtonId.Copy => Strings.ActionCopy,
         ButtonId.Save => Strings.ActionSave,
         _ => Strings.ActionClose,
@@ -247,6 +262,12 @@ internal sealed class EditorToolbar : Control
                 break;
             case ButtonId.Redo:
                 RedoClicked?.Invoke();
+                break;
+            case ButtonId.Pin:
+                PinClicked?.Invoke();
+                break;
+            case ButtonId.Print:
+                PrintClicked?.Invoke();
                 break;
             case ButtonId.Copy:
                 CopyClicked?.Invoke();
@@ -424,9 +445,49 @@ internal sealed class EditorToolbar : Control
                 g.FillPolygon(brush, new PointF[] { new(l + 1, b - 1), new(l + 2.5f, b - 6.5f), new(l + 6.5f, b - 2.5f) });
                 break;
 
+            case ButtonId.Marker:
+                using (var tip = new Pen(fore, 5f) { StartCap = LineCap.Flat, EndCap = LineCap.Flat })
+                {
+                    g.DrawLine(tip, l + 4, b - 6, rt - 2, t + 2);
+                }
+                using (var trail = new Pen(Color.FromArgb(110, fore), 3f) { StartCap = LineCap.Flat, EndCap = LineCap.Flat })
+                {
+                    g.DrawLine(trail, l, b - 1, rt - 3, b - 1);
+                }
+                break;
+
             case ButtonId.Line:
                 g.DrawLine(pen, l + 1, b - 1, rt - 1, t + 1);
                 break;
+
+            case ButtonId.Blur:
+            {
+                // Quadriculado 4×4 alternando cheio e vazado.
+                int cell = r.Width / 4;
+                for (int row = 0; row < 4; row++)
+                {
+                    for (int col = 0; col < 4; col++)
+                    {
+                        if ((row + col) % 2 == 0)
+                        {
+                            g.FillRectangle(brush, l + col * cell, t + row * cell, cell, cell);
+                        }
+                    }
+                }
+                using (var thin = new Pen(fore, 1f))
+                {
+                    g.DrawRectangle(thin, l, t, cell * 4 - 1, cell * 4 - 1);
+                }
+                break;
+            }
+
+            case ButtonId.Step:
+            {
+                g.FillEllipse(brush, l, t, r.Width, r.Height);
+                using var digit = new Pen(back, 2f) { StartCap = LineCap.Round, EndCap = LineCap.Round };
+                g.DrawLines(digit, new Point[] { new(cx - 2, t + 5), new(cx, t + 3), new(cx, b - 3) });
+                break;
+            }
 
             case ButtonId.Arrow:
                 g.DrawLine(pen, l + 1, b - 1, rt - 4, t + 4);
@@ -473,6 +534,22 @@ internal sealed class EditorToolbar : Control
                     {
                         g.DrawArc(arrowPen, arc, 180, 180); // da esquerda, por cima, até a direita
                     }
+                }
+                break;
+
+            case ButtonId.Pin:
+                // Tachinha: cabeça, corpo e ponta.
+                g.DrawLine(pen, l + 4, t + 2, rt - 4, t + 2);
+                g.FillPolygon(brush, new PointF[] { new(l + 5, t + 2), new(rt - 5, t + 2), new(rt - 3, t + 10), new(l + 3, t + 10) });
+                g.DrawLine(pen, cx, t + 10, cx, b);
+                break;
+
+            case ButtonId.Print:
+                using (var thin = new Pen(fore, 1.5f))
+                {
+                    g.DrawRectangle(thin, l + 4, t + 1, 8, 5);                   // papel entrando
+                    g.DrawRectangle(thin, l + 1, t + 6, r.Width - 2, 6);          // corpo
+                    g.FillRectangle(brush, l + 4, b - 5, 8, 4);                   // papel saindo
                 }
                 break;
 

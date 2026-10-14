@@ -206,3 +206,134 @@ public sealed class TextAnnotation : IAnnotation
         return path;
     }
 }
+
+/// <summary>Marca-texto: traço largo e translúcido, com pontas retas.</summary>
+public sealed class MarkerAnnotation(Color color, int thickness, List<Point> points) : IAnnotation
+{
+    private const int Alpha = 90;
+
+    public Color Color { get; } = color;
+
+    public int Thickness { get; } = thickness;
+
+    public IReadOnlyList<Point> Points => points;
+
+    private int Width => Thickness * 4;
+
+    public Rectangle Bounds => AnnotationDrawing.Around(points, PadFor(Thickness));
+
+    /// <summary>Margem para invalidar um trecho do traço com essa espessura.</summary>
+    public static int PadFor(int thickness) => thickness * 4 + AnnotationDrawing.BoundsMargin;
+
+    public void Draw(Graphics g, Bitmap source)
+    {
+        if (points.Count == 0)
+        {
+            return;
+        }
+
+        Color color = Color.FromArgb(Alpha, Color);
+        if (points.Count == 1)
+        {
+            float half = Width / 2f;
+            using var brush = new SolidBrush(color);
+            g.FillRectangle(brush, points[0].X - half, points[0].Y - half, Width, Width);
+            return;
+        }
+
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        // Um único DrawLines: os trechos que se cruzam não escurecem.
+        using var pen = new Pen(color, Width)
+        {
+            StartCap = LineCap.Square,
+            EndCap = LineCap.Square,
+            LineJoin = LineJoin.Round,
+        };
+        g.DrawLines(pen, points.ToArray());
+    }
+}
+
+/// <summary>
+/// Pixelização de uma área. Sempre lê o bitmap <b>base</b>, então nunca revela o conteúdo original
+/// (nem o que estiver anotado por baixo).
+/// </summary>
+public sealed class BlurAnnotation(Rectangle r, int blockSize = 12) : IAnnotation
+{
+    public Rectangle Rect { get; } = r;
+
+    public int BlockSize { get; } = Math.Max(2, blockSize);
+
+    public Rectangle Bounds => Rect;
+
+    public void Draw(Graphics g, Bitmap source)
+    {
+        Rectangle area = Rectangle.Intersect(Rect, new Rectangle(Point.Empty, source.Size));
+        if (area.Width <= 0 || area.Height <= 0)
+        {
+            return;
+        }
+
+        int smallWidth = (area.Width + BlockSize - 1) / BlockSize;
+        int smallHeight = (area.Height + BlockSize - 1) / BlockSize;
+
+        using var small = new Bitmap(smallWidth, smallHeight, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+        using (var sg = Graphics.FromImage(small))
+        using (var attributes = new System.Drawing.Imaging.ImageAttributes())
+        {
+            // Reduz com média dos pixels; o espelhamento evita bordas "puxando" transparência.
+            attributes.SetWrapMode(WrapMode.TileFlipXY);
+            sg.InterpolationMode = InterpolationMode.HighQualityBilinear;
+            sg.PixelOffsetMode = PixelOffsetMode.HighQuality;
+            sg.DrawImage(source, new Rectangle(0, 0, smallWidth, smallHeight),
+                area.X, area.Y, area.Width, area.Height, GraphicsUnit.Pixel, attributes);
+        }
+
+        GraphicsState state = g.Save();
+        g.InterpolationMode = InterpolationMode.NearestNeighbor;
+        g.PixelOffsetMode = PixelOffsetMode.Half;
+        g.CompositingMode = CompositingMode.SourceCopy;
+        g.DrawImage(small, area, 0, 0, smallWidth, smallHeight, GraphicsUnit.Pixel);
+        g.Restore(state);
+    }
+}
+
+/// <summary>Passo numerado: círculo preenchido com o número em branco no centro.</summary>
+public sealed class StepAnnotation(Color color, int number, Point center, int radius) : IAnnotation
+{
+    public Color Color { get; } = color;
+
+    public int Number { get; } = number;
+
+    public Point Center { get; } = center;
+
+    public int Radius { get; } = radius;
+
+    public Rectangle Bounds => Rectangle.Inflate(Circle, AnnotationDrawing.BoundsMargin, AnnotationDrawing.BoundsMargin);
+
+    private Rectangle Circle => new(Center.X - Radius, Center.Y - Radius, 2 * Radius, 2 * Radius);
+
+    public void Draw(Graphics g, Bitmap source)
+    {
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        using (var brush = new SolidBrush(Color))
+        {
+            g.FillEllipse(brush, Circle);
+        }
+
+        string text = Number.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        float size = Radius * (text.Length > 1 ? 0.95f : 1.2f);
+        using FontFamily family = TextAnnotation.CreateFamily();
+        using var path = new GraphicsPath();
+        using var format = (StringFormat)StringFormat.GenericTypographic.Clone();
+        path.AddString(text, family, (int)FontStyle.Regular, size, Point.Empty, format);
+
+        // Centraliza pela forma real dos algarismos (sem o espaço do topo da fonte).
+        RectangleF b = path.GetBounds();
+        using (var move = new Matrix())
+        {
+            move.Translate(Center.X - (b.X + b.Width / 2f), Center.Y - (b.Y + b.Height / 2f));
+            path.Transform(move);
+        }
+        g.FillPath(Brushes.White, path);
+    }
+}

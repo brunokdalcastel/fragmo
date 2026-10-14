@@ -8,7 +8,7 @@ using Grip = Fragmo.Overlay.SelectionGeometry.Handle;
 
 namespace Fragmo.Overlay;
 
-internal enum OverlayResult { Cancel, Copy, Save }
+internal enum OverlayResult { Cancel, Copy, Save, Pin, Print }
 
 /// <summary>
 /// Janela de tela cheia sobre a tela congelada, onde o usuário escolhe a área a capturar.
@@ -69,7 +69,11 @@ internal sealed class SelectionOverlay : Form
     private bool _editingText;
     private Point _textOrigin;
 
-    public SelectionOverlay(CapturedScreen screen, AppSettings settings)
+    /// <param name="initialSelection">
+    /// Área já escolhida (em coordenadas do bitmap), usada por "repetir última área" e "janela ativa":
+    /// o overlay abre direto no editor.
+    /// </param>
+    public SelectionOverlay(CapturedScreen screen, AppSettings settings, Rectangle? initialSelection = null)
     {
         _screen = screen;
         _settings = settings;
@@ -93,6 +97,15 @@ internal sealed class SelectionOverlay : Form
         {
             _cursor = CoordinateMapper.ScreenToBitmap(new Point(p.X, p.Y), screen.VirtualBounds);
         }
+
+        if (initialSelection is Rectangle initial)
+        {
+            _selection = SelectionGeometry.Clamp(initial, ImageSize);
+            if (HasSelection)
+            {
+                _state = State.Selected;
+            }
+        }
     }
 
     public OverlayResult Result { get; private set; } = OverlayResult.Cancel;
@@ -112,6 +125,11 @@ internal sealed class SelectionOverlay : Form
 
     private Size ImageSize => _screen.Image.Size;
 
+    private bool IsFreehand => _tool is ToolKind.Pen or ToolKind.Marker;
+
+    /// <summary>Raio do círculo dos passos, acompanhando a espessura escolhida.</summary>
+    private int StepRadius => 10 + _style.Thickness * 2;
+
     /// <summary>Tamanho do texto em pixels, acompanhando a espessura escolhida.</summary>
     private float TextSize => 12 + _style.Thickness * 3;
 
@@ -126,6 +144,11 @@ internal sealed class SelectionOverlay : Form
     protected override void OnShown(EventArgs e)
     {
         base.OnShown(e);
+        if (_state == State.Selected)
+        {
+            ShowToolbars();
+            UpdateCursor(_cursor);
+        }
         Activate();
         Focus();
     }
@@ -193,6 +216,12 @@ internal sealed class SelectionOverlay : Form
             case Keys.Control | Keys.S:
                 Finish(OverlayResult.Save);
                 return true;
+            case Keys.Control | Keys.T:
+                Finish(OverlayResult.Pin);
+                return true;
+            case Keys.Control | Keys.P:
+                Finish(OverlayResult.Print);
+                return true;
             case Keys.Control | Keys.Z:
                 if (!_drawing) _history.Undo();
                 return true;
@@ -209,6 +238,9 @@ internal sealed class SelectionOverlay : Form
             Keys.A => ToolKind.Arrow,
             Keys.R => ToolKind.Rectangle,
             Keys.T => ToolKind.Text,
+            Keys.M => ToolKind.Marker,
+            Keys.B => ToolKind.Blur,
+            Keys.N => ToolKind.Step,
             Keys.V => ToolKind.Select,
             _ => null,
         };
@@ -408,10 +440,15 @@ internal sealed class SelectionOverlay : Form
             OpenTextBox(p);
             return;
         }
+        if (_tool == ToolKind.Step)
+        {
+            _history.Add(new StepAnnotation(_style.Color, StepCounter.Next(_history.Items), p, StepRadius));
+            return;
+        }
 
         _drawing = true;
         _drawStart = p;
-        _penPoints = _tool == ToolKind.Pen ? [p] : null;
+        _penPoints = IsFreehand ? [p] : null;
         _pending = BuildPending(p);
         if (_pending is not null)
         {
@@ -430,7 +467,8 @@ internal sealed class SelectionOverlay : Form
             }
             _penPoints.Add(p);
             // Só o trecho novo precisa ser repintado.
-            Invalidate(AnnotationDrawing.Around([last, p], AnnotationDrawing.Pad(_style)));
+            int pad = _tool == ToolKind.Marker ? MarkerAnnotation.PadFor(_style.Thickness) : AnnotationDrawing.Pad(_style);
+            Invalidate(AnnotationDrawing.Around([last, p], pad));
             return;
         }
 
@@ -442,7 +480,7 @@ internal sealed class SelectionOverlay : Form
     private void EndAnnotation(Point p)
     {
         IAnnotation? done = _pending;
-        bool trivial = _tool != ToolKind.Pen && p == _drawStart; // clique sem arrastar
+        bool trivial = !IsFreehand && p == _drawStart; // clique sem arrastar
         _drawing = false;
         _pending = null;
         _penPoints = null;
@@ -466,9 +504,12 @@ internal sealed class SelectionOverlay : Form
         return _tool switch
         {
             ToolKind.Pen => new PenAnnotation(_style, _penPoints!),
+            ToolKind.Marker => new MarkerAnnotation(_style.Color, _style.Thickness, _penPoints!),
             ToolKind.Line => new LineAnnotation(_style, _drawStart, shift ? SnapAngle(_drawStart, current) : current),
             ToolKind.Arrow => new ArrowAnnotation(_style, _drawStart, shift ? SnapAngle(_drawStart, current) : current),
             ToolKind.Rectangle => new RectangleAnnotation(_style,
+                shift ? SquareFrom(_drawStart, current) : SelectionGeometry.FromPoints(_drawStart, current)),
+            ToolKind.Blur => new BlurAnnotation(
                 shift ? SquareFrom(_drawStart, current) : SelectionGeometry.FromPoints(_drawStart, current)),
             _ => null,
         };
@@ -612,6 +653,8 @@ internal sealed class SelectionOverlay : Form
             _actionsBar.SetUndoRedo(_history.CanUndo, _history.CanRedo);
             _actionsBar.UndoClicked += () => { CloseTextBox(commit: true); _history.Undo(); };
             _actionsBar.RedoClicked += () => { CloseTextBox(commit: true); _history.Redo(); };
+            _actionsBar.PinClicked += () => Finish(OverlayResult.Pin);
+            _actionsBar.PrintClicked += () => Finish(OverlayResult.Print);
             _actionsBar.CopyClicked += () => Finish(OverlayResult.Copy);
             _actionsBar.SaveClicked += () => Finish(OverlayResult.Save);
             _actionsBar.CloseClicked += () => Finish(OverlayResult.Cancel);

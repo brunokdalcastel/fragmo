@@ -523,7 +523,7 @@ public sealed record StrokeStyle(Color Color, int Thickness);
 - Instruction: commit `feat: desfoque, passos, marcador, fixar, janela, tela cheia e imprimir (fase 4)`.
 
 ### Verification
-- [ ] `dotnet test` verde.
+- [x] `dotnet build` sem avisos e `dotnet test` verde (85 testes).
 - [ ] Desfoque esconde o texto de verdade (salvar e abrir a imagem); passos numeram 1, 2, 3 e reaproveitam o número depois de desfazer.
 - [ ] `Ctrl+T` fixa o recorte na tela; roda = zoom, `Ctrl+roda` = opacidade, arrastar move, `Esc` fecha.
 - [ ] `Ctrl+Shift+F` salva o monitor principal direto na pasta, com balão.

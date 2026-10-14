@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Fragmo.Capture;
 using Fragmo.Hotkeys;
 using Fragmo.Output;
+using Fragmo.Pin;
 using Fragmo.Settings;
 using Fragmo.Ui;
 
@@ -22,6 +23,7 @@ internal sealed class TrayContext : ApplicationContext
     private readonly Icon _icon;
     private readonly HotkeyManager _hotkeys;
     private readonly CaptureWorkflow _workflow;
+    private readonly List<PinWindow> _pins = [];
 
     public TrayContext(SettingsStore store, AppSettings settings)
     {
@@ -42,6 +44,7 @@ internal sealed class TrayContext : ApplicationContext
         _hotkeys = new HotkeyManager();
         _hotkeys.Pressed += OnHotkeyPressed;
         RegisterCaptureAreaHotkey();
+        RegisterOtherHotkeys();
     }
 
     public void ShowInfo(string text) =>
@@ -66,25 +69,81 @@ internal sealed class TrayContext : ApplicationContext
         ShowError(Strings.HotkeyFailed);
     }
 
+    /// <summary>Registra tela cheia, janela ativa e repetir; avisa por balão os que falharem.</summary>
+    private void RegisterOtherHotkeys()
+    {
+        (HotkeyAction Action, string Text)[] hotkeys =
+        [
+            (HotkeyAction.CaptureFullScreen, _settings.Hotkeys.CaptureFullScreen),
+            (HotkeyAction.CaptureWindow, _settings.Hotkeys.CaptureWindow),
+            (HotkeyAction.RepeatLastArea, _settings.Hotkeys.RepeatLastArea),
+        ];
+
+        List<string> failed = [];
+        foreach ((HotkeyAction action, string text) in hotkeys)
+        {
+            if (!string.IsNullOrWhiteSpace(text) && !TryRegister(action, text))
+            {
+                failed.Add(text);
+            }
+        }
+
+        if (failed.Count > 0)
+        {
+            ShowError(string.Format(Strings.HotkeysInUse, string.Join(", ", failed)));
+        }
+    }
+
+    /// <summary>Mostra uma imagem fixada e guarda a referência para fechá-la ao sair.</summary>
+    public void AddPin(PinWindow pin)
+    {
+        _pins.Add(pin);
+        pin.FormClosed += (_, _) => _pins.Remove(pin);
+        pin.Info += ShowInfo;
+        pin.Show();
+    }
+
+    private void CloseAllPins()
+    {
+        foreach (PinWindow pin in _pins.ToArray())
+        {
+            pin.Close();
+        }
+    }
+
     private bool TryRegister(HotkeyAction action, string text) =>
         HotkeyBinding.TryParse(text, out HotkeyBinding binding) && _hotkeys.TryRegister(action, binding);
 
     private void OnHotkeyPressed(HotkeyAction action)
     {
-        if (action == HotkeyAction.CaptureArea)
+        switch (action)
         {
-            _workflow.CaptureArea();
+            case HotkeyAction.CaptureArea:
+                _workflow.CaptureArea();
+                break;
+            case HotkeyAction.CaptureFullScreen:
+                _workflow.CaptureFullScreen();
+                break;
+            case HotkeyAction.CaptureWindow:
+                _workflow.CaptureWindow();
+                break;
+            case HotkeyAction.RepeatLastArea:
+                _workflow.RepeatLastArea();
+                break;
         }
     }
 
     private ContextMenuStrip BuildMenu()
     {
         var menu = new ContextMenuStrip();
-        menu.Items.Add(Strings.MenuCaptureArea, null, async (_, _) =>
-        {
-            await Task.Delay(MenuCloseDelayMs);
-            _workflow.CaptureArea();
-        });
+        AddCaptureItem(menu, Strings.MenuCaptureArea, () => _workflow.CaptureArea());
+        AddCaptureItem(menu, Strings.MenuFullScreen, () => _workflow.CaptureFullScreen());
+        AddCaptureItem(menu, Strings.MenuWindow, () => _workflow.CaptureWindow());
+        AddCaptureItem(menu, Strings.MenuRepeatLast, () => _workflow.RepeatLastArea());
+        var closePins = new ToolStripMenuItem(Strings.MenuClosePins, null, (_, _) => CloseAllPins());
+        menu.Items.Add(closePins);
+        menu.Opening += (_, _) => closePins.Enabled = _pins.Count > 0;
+        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(Strings.MenuOpenFolder, null, (_, _) => OpenCapturesFolder());
         menu.Items.Add(Strings.MenuSettings, null, (_, _) => OpenSettings());
         menu.Items.Add(Strings.MenuAbout, null, (_, _) => ShowAbout());
@@ -92,6 +151,14 @@ internal sealed class TrayContext : ApplicationContext
         menu.Items.Add(Strings.MenuExit, null, (_, _) => ExitThread());
         return menu;
     }
+
+    /// <summary>Item de captura: espera o menu sumir da tela antes de capturar.</summary>
+    private static void AddCaptureItem(ContextMenuStrip menu, string text, Action capture) =>
+        menu.Items.Add(text, null, async (_, _) =>
+        {
+            await Task.Delay(MenuCloseDelayMs);
+            capture();
+        });
 
     private void OpenCapturesFolder() => OpenInExplorer(_settings.SaveFolder);
 
@@ -116,6 +183,7 @@ internal sealed class TrayContext : ApplicationContext
 
     protected override void ExitThreadCore()
     {
+        CloseAllPins();
         _hotkeys.Dispose();
         _notifyIcon.Visible = false;
         _notifyIcon.Dispose();

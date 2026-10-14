@@ -1,4 +1,6 @@
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
+using Fragmo.Native;
 
 namespace Fragmo.Capture;
 
@@ -10,6 +12,9 @@ internal sealed record CapturedScreen(Bitmap Image, Rectangle VirtualBounds) : I
 
 internal static class ScreenCapturer
 {
+    // Área de trabalho e barra de tarefas não contam como "janela ativa".
+    private static readonly string[] IgnoredWindowClasses = ["Progman", "WorkerW", "Shell_TrayWnd"];
+
     public static CapturedScreen CaptureVirtualScreen()
     {
         Rectangle vs = SystemInformation.VirtualScreen;
@@ -38,4 +43,24 @@ internal static class ScreenCapturer
         }
         return source.Clone(rect, PixelFormat.Format32bppArgb);
     }
+
+    /// <summary>Limites da janela ativa em coordenadas de tela, sem a sombra; <c>null</c> se não houver.</summary>
+    public static Rectangle? GetForegroundWindowBounds()
+    {
+        IntPtr hwnd = User32.GetForegroundWindow();
+        if (hwnd == IntPtr.Zero || IgnoredWindowClasses.Contains(User32.GetClassName(hwnd), StringComparer.Ordinal))
+        {
+            return null;
+        }
+
+        int hr = Dwmapi.DwmGetWindowAttribute(hwnd, Dwmapi.DWMWA_EXTENDED_FRAME_BOUNDS,
+            out Dwmapi.RECT r, Marshal.SizeOf<Dwmapi.RECT>());
+        if (hr != 0 || r.Right <= r.Left || r.Bottom <= r.Top)
+        {
+            return null;
+        }
+        return Rectangle.FromLTRB(r.Left, r.Top, r.Right, r.Bottom);
+    }
+
+    public static Rectangle GetPrimaryScreenBounds() => Screen.PrimaryScreen!.Bounds;
 }

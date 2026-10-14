@@ -1,15 +1,54 @@
 using Fragmo.Output;
 using Fragmo.Overlay;
+using Fragmo.Pin;
 using Fragmo.Settings;
 
 namespace Fragmo.Capture;
 
-/// <summary>Fluxo completo: congelar a tela, selecionar a área e copiar ou salvar.</summary>
+/// <summary>Fluxos de captura: área, janela ativa, repetir a última área e tela cheia.</summary>
 internal sealed class CaptureWorkflow(AppSettings settings, SettingsStore store, OutputService output, TrayContext tray)
 {
     private bool _busy;
 
-    public void CaptureArea()
+    public void CaptureArea() => Run(() =>
+    {
+        // Captura antes de mostrar o overlay, para a tela ficar "congelada".
+        using var screen = ScreenCapturer.CaptureVirtualScreen();
+        RunOverlay(screen, null);
+    });
+
+    /// <summary>Abre o editor com a janela ativa já selecionada; sem janela, cai na seleção normal.</summary>
+    public void CaptureWindow() => Run(() =>
+    {
+        // A janela precisa ser lida antes: depois o overlay é que fica em primeiro plano.
+        Rectangle? window = ScreenCapturer.GetForegroundWindowBounds();
+        using var screen = ScreenCapturer.CaptureVirtualScreen();
+        RunOverlay(screen, window is Rectangle bounds ? ToBitmap(bounds, screen) : null);
+    });
+
+    /// <summary>Reabre a seleção na última área usada; sem área anterior, abre a seleção normal.</summary>
+    public void RepeatLastArea() => Run(() =>
+    {
+        using var screen = ScreenCapturer.CaptureVirtualScreen();
+        RegionDto? last = settings.LastRegion;
+        Rectangle? initial = last is null
+            ? null
+            : ToBitmap(new Rectangle(last.X, last.Y, last.Width, last.Height), screen);
+        RunOverlay(screen, initial);
+    });
+
+    /// <summary>Salva o monitor principal direto na pasta, sem diálogo.</summary>
+    public void CaptureFullScreen() => Run(() =>
+    {
+        using var screen = ScreenCapturer.CaptureVirtualScreen();
+        Rectangle primary = ScreenCapturer.GetPrimaryScreenBounds();
+        var rect = new Rectangle(CoordinateMapper.ScreenToBitmap(primary.Location, screen.VirtualBounds), primary.Size);
+        using Bitmap image = ScreenCapturer.Crop(screen.Image, rect);
+        string path = output.SaveDirect(image);
+        tray.ShowInfo(string.Format(Strings.SavedTo, path));
+    });
+
+    private void Run(Action capture)
     {
         if (_busy)
         {
@@ -19,53 +58,7 @@ internal sealed class CaptureWorkflow(AppSettings settings, SettingsStore store,
         _busy = true;
         try
         {
-            // Captura antes de mostrar o overlay, para a tela ficar "congelada".
-            using var screen = ScreenCapturer.CaptureVirtualScreen();
-
-            OverlayResult result;
-            Rectangle selection;
-            bool styleChanged;
-            Bitmap? composed = null;
-            using (var overlay = new SelectionOverlay(screen, settings))
-            {
-                overlay.ShowDialog();
-                result = overlay.Result;
-                selection = overlay.Selection;
-                styleChanged = overlay.StrokeStyleChanged;
-                if (result != OverlayResult.Cancel && selection.Width > 0 && selection.Height > 0)
-                {
-                    // Inclui as anotações; precisa do overlay vivo (é ele que guarda o histórico).
-                    composed = overlay.ComposeResult();
-                }
-            }
-
-            if (composed is null)
-            {
-                if (styleChanged)
-                {
-                    store.Save(settings); // cor/espessura novas valem mesmo se cancelar
-                }
-                return;
-            }
-
-            using var image = composed;
-            if (result == OverlayResult.Copy)
-            {
-                output.CopyToClipboard(image);
-                tray.ShowInfo(Strings.Copied);
-            }
-            else
-            {
-                string? path = output.Save(image, null);
-                if (path is not null)
-                {
-                    tray.ShowInfo(string.Format(Strings.SavedTo, path));
-                }
-            }
-
-            Rectangle region = CoordinateMapper.BitmapToScreen(selection, screen.VirtualBounds);
-            settings.LastRegion = new RegionDto(region.X, region.Y, region.Width, region.Height);
-            store.Save(settings);
+            capture();
         }
         catch (Exception ex)
         {
@@ -75,5 +68,74 @@ internal sealed class CaptureWorkflow(AppSettings settings, SettingsStore store,
         {
             _busy = false;
         }
+    }
+
+    /// <summary>Retângulo de tela → bitmap, limitado à imagem; <c>null</c> se ficar fora dela.</summary>
+    private static Rectangle? ToBitmap(Rectangle screenRect, CapturedScreen screen)
+    {
+        var r = new Rectangle(CoordinateMapper.ScreenToBitmap(screenRect.Location, screen.VirtualBounds), screenRect.Size);
+        Rectangle clamped = SelectionGeometry.Clamp(r, screen.Image.Size);
+        return clamped.IsEmpty ? null : clamped;
+    }
+
+    private void RunOverlay(CapturedScreen screen, Rectangle? initialSelection)
+    {
+        OverlayResult result;
+        Rectangle selection;
+        bool styleChanged;
+        Bitmap? composed = null;
+        using (var overlay = new SelectionOverlay(screen, settings, initialSelection))
+        {
+            overlay.ShowDialog();
+            result = overlay.Result;
+            selection = overlay.Selection;
+            styleChanged = overlay.StrokeStyleChanged;
+            if (result != OverlayResult.Cancel && selection.Width > 0 && selection.Height > 0)
+            {
+                // Inclui as anotações; precisa do overlay vivo (é ele que guarda o histórico).
+                composed = overlay.ComposeResult();
+            }
+        }
+
+        if (composed is null)
+        {
+            if (styleChanged)
+            {
+                store.Save(settings); // cor/espessura novas valem mesmo se cancelar
+            }
+            return;
+        }
+
+        Rectangle region = CoordinateMapper.BitmapToScreen(selection, screen.VirtualBounds);
+        if (result == OverlayResult.Pin)
+        {
+            // A janela fixada passa a ser dona da imagem.
+            var pin = new PinWindow(composed, region.Location, output);
+            tray.AddPin(pin);
+        }
+        else
+        {
+            using Bitmap image = composed;
+            switch (result)
+            {
+                case OverlayResult.Copy:
+                    output.CopyToClipboard(image);
+                    tray.ShowInfo(Strings.Copied);
+                    break;
+                case OverlayResult.Print:
+                    output.Print(image, null);
+                    break;
+                default:
+                    string? path = output.Save(image, null);
+                    if (path is not null)
+                    {
+                        tray.ShowInfo(string.Format(Strings.SavedTo, path));
+                    }
+                    break;
+            }
+        }
+
+        settings.LastRegion = new RegionDto(region.X, region.Y, region.Width, region.Height);
+        store.Save(settings);
     }
 }

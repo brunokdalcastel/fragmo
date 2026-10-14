@@ -26,6 +26,10 @@ internal static class Strings
 
     public static string TrayTooltip => T("Fragmo — captura de tela", "Fragmo — screen capture");
     public static string MenuCaptureArea => T("Capturar área", "Capture area");
+    public static string MenuFullScreen => T("Tela cheia (salvar)", "Full screen (save)");
+    public static string MenuWindow => T("Janela ativa", "Active window");
+    public static string MenuRepeatLast => T("Repetir última área", "Repeat last area");
+    public static string MenuClosePins => T("Fechar imagens fixadas", "Close pinned images");
     public static string MenuSettings => T("Configurações…", "Settings…");
     public static string MenuOpenFolder => T("Abrir pasta de capturas", "Open captures folder");
     public static string MenuAbout => T("Sobre", "About");
@@ -46,6 +50,10 @@ internal static class Strings
         "Não foi possível registrar o atalho de captura. Use \"Capturar área\" no menu da bandeja.",
         "Could not register the capture hotkey. Use \"Capture area\" in the tray menu.");
 
+    public static string HotkeysInUse => T(
+        "Atalhos em uso por outro programa: {0}",
+        "Hotkeys in use by another program: {0}");
+
     public static string Copied => T("Imagem copiada", "Image copied");
     public static string SavedTo => T("Salvo em {0}", "Saved to {0}");
     public static string CaptureError => T("Falha na captura: {0}", "Capture failed: {0}");
@@ -59,6 +67,9 @@ internal static class Strings
     public static string ToolArrow => T("Seta (A)", "Arrow (A)");
     public static string ToolRectangle => T("Retângulo (R)", "Rectangle (R)");
     public static string ToolText => T("Texto (T)", "Text (T)");
+    public static string ToolMarker => T("Marcador (M)", "Highlighter (M)");
+    public static string ToolBlur => T("Desfoque (B)", "Blur (B)");
+    public static string ToolStep => T("Passos numerados (N)", "Numbered steps (N)");
     public static string ToolColor => T("Cor", "Color");
     public static string ToolThickness => T("Espessura", "Thickness");
     public static string MoreColors => T("Mais cores…", "More colors…");
@@ -67,6 +78,14 @@ internal static class Strings
     public static string ActionCopy => T("Copiar (Ctrl+C)", "Copy (Ctrl+C)");
     public static string ActionSave => T("Salvar (Ctrl+S)", "Save (Ctrl+S)");
     public static string ActionClose => T("Fechar (Esc)", "Close (Esc)");
+    public static string ActionPin => T("Fixar na tela (Ctrl+T)", "Pin to screen (Ctrl+T)");
+    public static string ActionPrint => T("Imprimir (Ctrl+P)", "Print (Ctrl+P)");
+
+    // Janela fixada: menu de contexto.
+    public static string PinCopy => T("Copiar", "Copy");
+    public static string PinSave => T("Salvar…", "Save…");
+    public static string PinClose => T("Fechar", "Close");
+    public const string PinZoomReset = "Zoom 100%";
 
     public static string UnexpectedError => T(
         "Ocorreu um erro inesperado. Detalhes gravados em {0}.\n\n{1}",

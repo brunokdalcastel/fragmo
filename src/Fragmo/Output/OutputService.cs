@@ -1,4 +1,6 @@
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Drawing.Printing;
 using System.Runtime.InteropServices;
 using Fragmo.Settings;
 
@@ -62,6 +64,26 @@ internal sealed class OutputService(AppSettings settings)
         string path = Path.Combine(settings.SaveFolder, FileNameBuilder.MakeUnique(settings.SaveFolder, name, File.Exists));
         WriteImage(img, path, settings.DefaultFormat);
         return path;
+    }
+
+    /// <summary>Imprime numa página, reduzindo para caber nas margens (nunca amplia).</summary>
+    public void Print(Bitmap img, IWin32Window? owner)
+    {
+        using var document = new PrintDocument { DocumentName = Strings.AppName };
+        document.PrintPage += (_, e) =>
+        {
+            Graphics g = e.Graphics!;
+            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+            g.DrawImage(img, PrintLayout.Fit(img.Size, e.MarginBounds));
+            e.HasMorePages = false;
+        };
+
+        using var dialog = new PrintDialog { Document = document, UseEXDialog = true, AllowSomePages = false };
+        if (dialog.ShowDialog(owner) == DialogResult.OK)
+        {
+            document.Print();
+        }
     }
 
     public void WriteImage(Bitmap img, string path, ImageFormatKind fmt)
