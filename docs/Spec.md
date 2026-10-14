@@ -638,3 +638,33 @@ public sealed record StrokeStyle(Color Color, int Thickness);
 - [ ] OCR de uma captura de texto da tela copia o texto correto (PT-BR).
 - [ ] Atraso de 5 s permite abrir um menu antes da captura.
 - [ ] "Recentes" lista só arquivos que existem, no máximo 20.
+
+> A Fase 6 foi substituída pelas fases 7 a 9 (o OCR entrou na Fase 8).
+
+---
+
+## Phase 7: Barra de ferramentas única
+- `Overlay/ToolbarPlacement.cs` (pura): centralizada abaixo da seleção; sem espaço, acima; seleção da altura toda, dentro, junto à borda inferior; sempre no monitor com a maior parte da seleção. Testes: `ToolbarPlacementTests`.
+- `Editor/EditorToolbar.cs`: uma barra horizontal, cantos arredondados (raio 10), fundo do tema, destaque Accent. Grupos: [tamanho] | caneta, linha, seta, retângulo, marcador, texto, passos, desfoque, desfoque automático | cor, espessura | desfazer, refazer | fixar, imprimir, copiar, copiar texto, salvar, fechar.
+- `SelectionOverlay`: o rótulo de tamanho no canto só aparece enquanto se arrasta ou redimensiona (a barra fica escondida nesse momento).
+
+### Verification
+- [x] `dotnet build` sem avisos e `dotnet test` verde.
+- [ ] Barra abaixo, acima e dentro da seleção conforme o espaço, em 1 e 2 monitores.
+
+## Phase 8: Copiar texto (OCR local)
+- TFM `net10.0-windows10.0.19041.0` (app e testes); `Ocr/OcrService.cs` com `Windows.Media.Ocr`, idiomas do perfil, amplia imagens pequenas (`ChooseScale`, testado).
+- Botão "Copiar texto" (O) → `OverlayResult.CopyText` → OCR da área sem anotações → área de transferência + aviso "N linhas copiadas". Sem idioma de OCR: mensagem de como instalar.
+
+### Verification
+- [x] OCR real reconhece texto pt-BR nesta máquina.
+- [ ] Botão e tecla O copiam o texto de uma captura real.
+
+## Phase 9: Desfoque automático
+- `Ocr/SensitiveDataDetector.cs` (pura): CPF e CNPJ com dígitos verificadores, e-mail, IPv4, telefone BR. Testes: `SensitiveDataDetectorTests`.
+- `Editor/AnnotationGroup`: lote numa única etapa de desfazer. Botão "Desfoque automático" (X); não repete áreas já desfocadas.
+- Configuração `AutoBlurOnCapture` (desligada por padrão).
+
+### Verification
+- [x] Ponta a ponta com OCR real: 4 itens desfocados, CPF inválido mantido, um Ctrl+Z desfaz o lote.
+- [ ] Opção "ao capturar" desfoca sozinha ao selecionar.

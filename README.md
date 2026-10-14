@@ -1,3 +1,4 @@
+<!-- PRINT NOVO: banner.png — o banner mostra o editor com as barras antigas; refazer com a barra única. -->
 <p align="center">
   <img src="docs/images/banner.png" alt="Fragmo — captura de tela para Windows" width="100%">
 </p>
@@ -44,29 +45,64 @@ numa pasta qualquer e abra. Para iniciar com o Windows, ligue a opção em **Con
 ### Como funciona
 
 **1. Selecione.** Aperte Print Screen: a tela congela e você arrasta para escolher a área. A lupa mostra cada pixel e
-a cor sob o cursor, e o tamanho da seleção aparece no canto.
+a cor sob o cursor, e o tamanho da seleção aparece enquanto você arrasta.
 
+<!-- PRINT NOVO: selecao.png — arrastando a seleção, com a lupa e o tamanho no canto. -->
 <p align="center"><img src="docs/images/selecao.png" alt="Selecionando uma área com a lupa" width="85%"></p>
 
-**2. Anote.** Ao soltar o mouse, as barras de ferramentas aparecem ao lado da seleção. Destaque com retângulo, seta e
-marcador, escreva um texto, numere os passos e **desfoque** dados sensíveis (o desfoque é gravado na imagem, não dá
-para desfazer depois de salvar).
+**2. Anote.** Ao soltar o mouse, aparece **uma barra só**, centralizada abaixo da seleção, com o tamanho da área no
+começo e as ferramentas em grupos. Destaque com retângulo, seta e marcador, escreva um texto, numere os passos e
+**desfoque** dados sensíveis, à mão ou com o [desfoque automático](#desfoque-automático). O desfoque é gravado na
+imagem: não dá para desfazer depois de salvar.
 
-<p align="center"><img src="docs/images/editor.png" alt="Editor com seta, retângulo, texto, marcador, passos e desfoque" width="85%"></p>
+<!-- PRINT NOVO: editor.png — seleção com anotações e a barra única embaixo (tamanho, ferramentas, cor, desfazer, ações). -->
+<p align="center"><img src="docs/images/editor.png" alt="Editor com a barra única: seta, retângulo, texto, marcador, passos e desfoque" width="85%"></p>
 
-**3. Use.** Copie (`Ctrl+C` ou `Enter`) e cole onde quiser, salve em PNG/JPEG/BMP (`Ctrl+S`), imprima (`Ctrl+P`) ou
-**fixe na tela** (`Ctrl+T`) para usar como referência por cima das outras janelas.
+**3. Use.** Copie a imagem (`Ctrl+C` ou `Enter`) e cole onde quiser, **copie o texto** que está na imagem (`O`), salve
+em PNG/JPEG/BMP (`Ctrl+S`), imprima (`Ctrl+P`) ou **fixe na tela** (`Ctrl+T`) para usar como referência por cima das
+outras janelas.
 
 | Ferramenta | Tecla | | Ação | Atalho |
 |---|---|---|---|---|
-| Caneta | `P` | | Copiar | `Ctrl+C` / `Enter` |
-| Linha | `L` | | Salvar | `Ctrl+S` |
-| Seta | `A` | | Fixar na tela | `Ctrl+T` |
-| Retângulo | `R` | | Imprimir | `Ctrl+P` |
+| Caneta | `P` | | Copiar imagem | `Ctrl+C` / `Enter` |
+| Linha | `L` | | Copiar texto | `O` |
+| Seta | `A` | | Salvar | `Ctrl+S` |
+| Retângulo | `R` | | Fixar na tela | `Ctrl+T` |
+| Marcador | `M` | | Imprimir | `Ctrl+P` |
 | Texto | `T` | | Desfazer / refazer | `Ctrl+Z` / `Ctrl+Y` |
-| Marcador | `M` | | Fechar | `Esc` |
+| Passos numerados | `N` | | Fechar | `Esc` |
 | Desfoque | `B` | | | |
-| Passos numerados | `N` | | | |
+| Desfoque automático | `X` | | | |
+
+### Copiar texto da imagem
+
+O botão **Copiar texto** (`O`) lê o texto da área selecionada e copia para a área de transferência, pronto para colar.
+Serve para erros na tela, trechos de PDF protegido, legendas de vídeo, tabelas em imagem. O reconhecimento usa o OCR
+do próprio Windows, no idioma do seu perfil, e roda no computador: nada é enviado para a internet.
+
+Se aparecer o aviso de que falta o idioma, instale o pacote em **Configurações do Windows › Hora e idioma › Idioma e
+região › "…" ao lado do idioma › Opções de idioma › Reconhecimento óptico de caracteres › Baixar**.
+
+<!-- PRINT NOVO: copiar-texto.png — seleção sobre um texto e o aviso "N linhas copiadas" na bandeja. -->
+
+### Desfoque automático
+
+O botão **Desfoque automático** (`X`) procura dados sensíveis na seleção e desfoca cada um deles:
+
+- **CPF** e **CNPJ**, conferindo os dígitos verificadores (um número com dígito errado não é desfocado);
+- **e-mail**;
+- **endereço IP** (IPv4);
+- **telefone** brasileiro, com ou sem DDD, com ou sem formatação.
+
+A bandeja avisa quantos itens foram desfocados, ou "Nenhum dado sensível encontrado". O lote inteiro entra como **uma
+etapa**: um `Ctrl+Z` desfaz tudo. Também dá para ligar **"Desfocar dados sensíveis automaticamente ao capturar"** em
+Configurações, e aí o desfoque acontece sozinho ao selecionar a área.
+
+**Tudo roda no seu PC.** O texto é lido pelo OCR do Windows e analisado pelo próprio Fragmo; nenhuma imagem ou texto
+sai do computador. Como o reconhecimento pode errar com letras muito pequenas ou fundos complicados, confira a imagem
+antes de compartilhar.
+
+<!-- PRINT NOVO: desfoque-automatico.png — antes e depois: CPF, e-mail e telefone desfocados e o aviso na bandeja. -->
 
 ### Atalhos globais
 
@@ -80,14 +116,17 @@ para desfazer depois de salvar).
 ### Configurações
 
 Clique com o botão direito no ícone da bandeja › **Configurações…**. Os atalhos mudam na hora (clique na caixa e
-pressione a combinação), e você escolhe a pasta, o formato, o prefixo do nome, o tema e o idioma.
+pressione a combinação), e você escolhe a pasta, o formato, o prefixo do nome, o tema, o idioma e se o desfoque
+automático roda sozinho ao capturar.
 
+<!-- PRINT NOVO: configuracoes.png — tela de configurações com a opção "Desfocar dados sensíveis automaticamente ao capturar". -->
 <p align="center"><img src="docs/images/configuracoes.png" alt="Tela de configurações" width="420"></p>
 
 **A tecla Print Screen abre a ferramenta do Windows?** No Windows 11 ela vem reservada para a captura do próprio
 sistema; nesse caso o Fragmo usa `Ctrl+Shift+S` e avisa na bandeja. Para liberar a tecla:
 **Configurações do Windows › Acessibilidade › Teclado** › desative *"Usar a tecla Print Screen para abrir a captura
-de tela"*. Depois feche o Fragmo (bandeja › Sair) e abra de novo.
+de tela"*. Depois feche o Fragmo (bandeja › Sair) e abra de novo. Se a tecla continuar sem abrir nada, saia da conta
+do Windows e entre de novo: algumas versões só aplicam essa opção no próximo login.
 
 ### Atualizar e desinstalar
 
@@ -142,28 +181,61 @@ in any folder and run it. To start it with Windows, turn the option on in **Sett
 ### How it works
 
 **1. Select.** Press Print Screen: the screen freezes and you drag to pick the area. The magnifier shows every pixel
-and the color under the cursor, and the selection size is shown in the corner.
+and the color under the cursor, and the selection size is shown while you drag.
 
+<!-- NEW SCREENSHOT: selecao.png — dragging the selection, with the magnifier and the size in the corner. -->
 <p align="center"><img src="docs/images/selecao.png" alt="Selecting an area with the magnifier" width="85%"></p>
 
-**2. Annotate.** When you release the mouse, the toolbars appear next to the selection. Highlight with rectangles,
-arrows and the highlighter, add text, number the steps and **blur** sensitive data (the blur is baked into the image).
+**2. Annotate.** When you release the mouse, **a single toolbar** appears, centered below the selection, with the area
+size first and the tools in groups. Highlight with rectangles, arrows and the highlighter, add text, number the steps
+and **blur** sensitive data, by hand or with [auto-blur](#auto-blur). The blur is baked into the image.
 
-<p align="center"><img src="docs/images/editor.png" alt="Editor with arrow, rectangle, text, highlighter, steps and blur" width="85%"></p>
+<!-- NEW SCREENSHOT: editor.png — selection with annotations and the single toolbar below it. -->
+<p align="center"><img src="docs/images/editor.png" alt="Editor with the single toolbar: arrow, rectangle, text, highlighter, steps and blur" width="85%"></p>
 
-**3. Use it.** Copy (`Ctrl+C` or `Enter`) and paste anywhere, save as PNG/JPEG/BMP (`Ctrl+S`), print (`Ctrl+P`) or
-**pin it to the screen** (`Ctrl+T`) as an always-on-top reference.
+**3. Use it.** Copy the image (`Ctrl+C` or `Enter`) and paste anywhere, **copy the text** in the image (`O`), save as
+PNG/JPEG/BMP (`Ctrl+S`), print (`Ctrl+P`) or **pin it to the screen** (`Ctrl+T`) as an always-on-top reference.
 
 | Tool | Key | | Action | Shortcut |
 |---|---|---|---|---|
-| Pen | `P` | | Copy | `Ctrl+C` / `Enter` |
-| Line | `L` | | Save | `Ctrl+S` |
-| Arrow | `A` | | Pin to screen | `Ctrl+T` |
-| Rectangle | `R` | | Print | `Ctrl+P` |
+| Pen | `P` | | Copy image | `Ctrl+C` / `Enter` |
+| Line | `L` | | Copy text | `O` |
+| Arrow | `A` | | Save | `Ctrl+S` |
+| Rectangle | `R` | | Pin to screen | `Ctrl+T` |
+| Highlighter | `M` | | Print | `Ctrl+P` |
 | Text | `T` | | Undo / redo | `Ctrl+Z` / `Ctrl+Y` |
-| Highlighter | `M` | | Close | `Esc` |
+| Numbered steps | `N` | | Close | `Esc` |
 | Blur | `B` | | | |
-| Numbered steps | `N` | | | |
+| Auto-blur | `X` | | | |
+
+### Copy text from the image
+
+**Copy text** (`O`) reads the text in the selected area and puts it on the clipboard, ready to paste: error messages,
+protected PDFs, video captions, tables shown as images. Recognition uses the OCR built into Windows, in your profile
+language, and runs on your computer: nothing is sent to the internet.
+
+If you are told a language is missing, install it in **Windows Settings › Time & language › Language & region › "…"
+next to the language › Language options › Optical character recognition › Download**.
+
+<!-- NEW SCREENSHOT: copiar-texto.png — selection over some text and the "N lines copied" tray notice. -->
+
+### Auto-blur
+
+**Auto-blur** (`X`) looks for sensitive data in the selection and blurs each item:
+
+- Brazilian **CPF** and **CNPJ** numbers, checking the verification digits (a number with a wrong digit is left alone);
+- **email** addresses;
+- **IP addresses** (IPv4);
+- Brazilian **phone numbers**, with or without area code and formatting.
+
+The tray tells you how many items were blurred, or "No sensitive data found". The whole batch is **one step**: a single
+`Ctrl+Z` undoes it. You can also turn on **"Automatically blur sensitive data when capturing"** in Settings to have it
+run as soon as you select an area.
+
+**Everything runs on your PC.** Text is read by the Windows OCR and analyzed by Fragmo itself; no image or text ever
+leaves your computer. Recognition can miss very small text or busy backgrounds, so check the image before sharing it.
+
+<!-- NEW SCREENSHOT: desfoque-automatico.png — before and after: CPF, email and phone blurred, plus the tray notice. -->
 
 ### Global hotkeys
 
@@ -177,12 +249,13 @@ arrows and the highlighter, add text, number the steps and **blur** sensitive da
 ### Settings
 
 Right-click the tray icon › **Settings…**. Hotkeys change immediately (click a box and press the combination), and you
-can pick the folder, format, file name prefix, theme and language.
+can pick the folder, format, file name prefix, theme, language and whether auto-blur runs on every capture.
 
-**Print Screen opens the Windows tool instead?** On Windows 11 the key is reserved for the built-in snipping tool; in
-that case Fragmo uses `Ctrl+Shift+S` and shows a tray notice. To free the key: **Windows Settings › Accessibility ›
+**Print Screen opens the Windows tool instead?** On Windows 11 the key is reserved for the system's own screen capture;
+in that case Fragmo uses `Ctrl+Shift+S` and shows a tray notice. To free the key: **Windows Settings › Accessibility ›
 Keyboard** › turn off *"Use the Print screen key to open screen capture"*. Then exit Fragmo (tray › Exit) and start
-it again.
+it again. If the key still does nothing, sign out of Windows and back in: some versions only apply this option at the
+next sign-in.
 
 ### Update and uninstall
 
