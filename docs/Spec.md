@@ -7,7 +7,7 @@
 
 | # | Decisão |
 |---|---|
-| Q1 | Tema **escuro** por padrão, com cor de destaque própria **`#FF6A1A`**. Claro e "seguir o Windows" continuam como opções em Configurações. |
+| Q1 | Tema **escuro** por padrão, com cor de destaque própria **`#A8204F`** (`Palette.Accent`: botões, ícone e destaques sobre fundo claro) e o tom claro **`#D9467A`** (`Palette.AccentLight`: textos e bordas sobre fundo escuro). Claro e "seguir o Windows" continuam como opções em Configurações. |
 | Q2 | PNG por padrão; nome `Fragmo_yyyy-MM-dd_HHmmss.png`; pasta `%USERPROFILE%\Pictures\Fragmo`. |
 | Q3 | Interface em **português e inglês**. Todos os textos ficam em `src/Fragmo/Strings.cs`, cada um com as duas versões lado a lado. O idioma padrão segue o Windows (`pt*` → português, qualquer outro → inglês) e pode ser trocado em Configurações. |
 | Q4 | `git init` na Fase 1 e um commit por fase, sem push e **sem linha `Co-Authored-By`**. |
@@ -165,7 +165,7 @@ public sealed class AppSettings
 
 ### `src/Fragmo/Ui/IconFactory.cs`
 - Action: Create
-- Instruction: `internal static class IconFactory` com `Icon CreateAppIcon(int size)`: desenha em GDI+ um quadrado arredondado `#FF6A1A` com um "colchete de recorte" branco (dois cantos em L) e devolve `Icon.FromHandle(bmp.GetHicon())` clonado (chamar `DestroyIcon` via `Native/User32.cs` depois de clonar). Ícone próprio, sem nenhum recurso de terceiros. Na Fase 5 ele também é exportado para `.ico`.
+- Instruction: `internal static class IconFactory` com `Icon CreateAppIcon(int size)`: desenha em GDI+ um quadrado arredondado `#A8204F` com um "colchete de recorte" branco (dois cantos em L) e devolve `Icon.FromHandle(bmp.GetHicon())` clonado (chamar `DestroyIcon` via `Native/User32.cs` depois de clonar). Ícone próprio, sem nenhum recurso de terceiros. Na Fase 5 ele também é exportado para `.ico`.
 
 ### `src/Fragmo/Native/User32.cs`
 - Action: Create
@@ -221,7 +221,7 @@ public sealed class AppSettings
 - [x] `dotnet build Fragmo.sln` sem avisos.
 - [x] `dotnet test` → testes de `SettingsStore` e `Strings` passando.
 - [ ] Com `"language": "english"` no `settings.json`, o menu da bandeja aparece em inglês depois de reiniciar o app.
-- [ ] `dotnet run --project src/Fragmo` mostra o ícone laranja na bandeja; o menu abre; "Sair" encerra o processo.
+- [ ] `dotnet run --project src/Fragmo` mostra o ícone na bandeja; o menu abre; "Sair" encerra o processo.
 - [x] Rodar uma segunda vez com o app aberto mostra "já está aberto" e não cria um segundo ícone.
 - [x] Mudar qualquer valor e chamar `Save` cria `%APPDATA%\Fragmo\settings.json` legível.
 
@@ -279,7 +279,7 @@ public sealed class AppSettings
   - Em `OnHandleCreated`: `SetWindowPos(Handle, …, vs.X, vs.Y, vs.Width, vs.Height, SWP_NOZORDER | SWP_NOACTIVATE)` para posicionar em pixels físicos.
   - `WndProc`: ignora `WM_DPICHANGED` (não repassa para `base`), para o WinForms não redimensionar o overlay ao cruzar monitores com escalas diferentes (R2).
   - Estados: `Idle` (sem seleção) → `Dragging` → `Selected`. Em `Selected` o mouse pode mover/redimensionar pelas alças (`SelectionGeometry.HitTest`), trocando o cursor conforme a alça.
-  - Pintura (`OnPaint`): desenha o bitmap congelado inteiro; por cima, um véu preto com alfa 110 em toda a área **menos** a seleção (usar `Region` com `Exclude`); borda de 1px `#FF6A1A` + 8 alças quadradas de 6px; rótulo `"{W} × {H}"` acima da seleção (ou dentro, se não couber).
+  - Pintura (`OnPaint`): desenha o bitmap congelado inteiro; por cima, um véu preto com alfa 110 em toda a área **menos** a seleção (usar `Region` com `Exclude`); borda de 1px `#D9467A` (`Palette.AccentLight`, por estar sobre o véu escuro) + 8 alças quadradas de 6px; rótulo `"{W} × {H}"` acima da seleção (ou dentro, se não couber).
   - Lupa (se `settings.ShowMagnifier` e estado ≠ `Selected`): quadrado de 120px perto do cursor (troca de lado na borda da tela), `InterpolationMode.NearestNeighbor`, fonte `MagnifierSource(cursor, 7)` ampliada 8×, mira central, e abaixo a cor do pixel em `#RRGGBB` e a posição `X, Y`.
   - Invalidação: só a união do retângulo antigo e do novo (seleção + rótulo + lupa) para não piscar.
   - Teclado/mouse: `Esc` → `DialogResult.Cancel`; `Enter`, `Ctrl+C` ou duplo clique na seleção → `Result = OverlayResult.Copy`; `Ctrl+S` → `OverlayResult.Save`; botão direito sem seleção → cancela, com seleção → limpa a seleção.
@@ -351,7 +351,7 @@ public sealed class AppSettings
 
 ### `src/Fragmo/Ui/Theme.cs`
 - Action: Create [x]
-- Instruction: `internal sealed record Theme(Color Background, Color Surface, Color Foreground, Color Border, Color Accent, Color AccentForeground)`, com `static Theme Light`, `static Theme Dark` (Accent `#FF6A1A` nos dois; o **escuro é o padrão** do app: fundo `#1E1E22`, superfície `#2A2A30`, texto `#F2F2F2`, borda `#3A3A42`) e `static Theme Resolve(ThemeMode mode)`: em `System`, lê `HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize\AppsUseLightTheme` (0 = escuro; ausente = claro).
+- Instruction: `internal sealed record Theme(Color Background, Color Surface, Color Foreground, Color Border, Color Accent, Color AccentText, Color AccentForeground)`, com `static Theme Light`, `static Theme Dark` (Accent `#A8204F` nos dois; AccentText `#D9467A` no escuro e `#A8204F` no claro, vindos da classe `Palette`; o **escuro é o padrão** do app: fundo `#1E1E22`, superfície `#2A2A30`, texto `#F2F2F2`, borda `#3A3A42`) e `static Theme Resolve(ThemeMode mode)`: em `System`, lê `HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize\AppsUseLightTheme` (0 = escuro; ausente = claro).
 
 ### `src/Fragmo/Editor/IAnnotation.cs`
 - Action: Create [x]
@@ -609,7 +609,7 @@ public sealed record StrokeStyle(Color Color, int Thickness);
 - [x] Trocar para JPEG + qualidade 70 gera `.jpg` com o nome da prévia.
 - [x] Tema Escuro/Claro/Sistema muda as barras e a tela de configurações.
 - [x] Trocar o idioma para English muda o menu da bandeja, a tela de configurações e as dicas do editor sem reiniciar o app.
-- [x] `./publish.ps1` gera um único `artifacts/publish/Fragmo.exe` (49 MB) com o ícone laranja. *(rodar numa máquina sem .NET: não testado)*
+- [x] `./publish.ps1` gera um único `artifacts/publish/Fragmo.exe` (49 MB) com o ícone do app. *(rodar numa máquina sem .NET: não testado)*
 - [ ] Monitor de rede (ex.: `Resource Monitor`) não mostra nenhuma conexão do `Fragmo.exe`.
 
 ---

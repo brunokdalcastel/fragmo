@@ -30,7 +30,8 @@ internal sealed class SelectionOverlay : Form
     private const int MaxThickness = 20;
     private const int MinTextBoxWidth = 40;
 
-    private static readonly Color Accent = Color.FromArgb(0xFF, 0x6A, 0x1A);
+    // Borda, alças e lupa ficam sobre o véu escuro: usa o tom claro do destaque.
+    private static readonly Color Accent = Palette.AccentLight;
     private static readonly Color FallbackColor = Color.FromArgb(0xFF, 0x3B, 0x30);
 
     private enum State { Idle, Dragging, Selected }

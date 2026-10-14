@@ -3,11 +3,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/brunokdalcastel/fragmo/releases/latest/download/Fragmo-Setup.exe"><img src="https://img.shields.io/badge/Baixar%20para%20Windows-Fragmo--Setup.exe-FF6A1A?style=for-the-badge&logo=windows&logoColor=white" alt="Baixar para Windows"></a>
+  <a href="https://github.com/brunokdalcastel/fragmo/releases/latest/download/Fragmo-Setup.exe"><img src="https://img.shields.io/badge/Baixar%20para%20Windows-Fragmo--Setup.exe-A8204F?style=for-the-badge&logo=windows&logoColor=white" alt="Baixar para Windows"></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/brunokdalcastel/fragmo/releases/latest"><img src="https://img.shields.io/github/v/release/brunokdalcastel/fragmo?label=vers%C3%A3o&color=FF6A1A" alt="Versão"></a>
+  <a href="https://github.com/brunokdalcastel/fragmo/releases/latest"><img src="https://img.shields.io/github/v/release/brunokdalcastel/fragmo?label=vers%C3%A3o&color=A8204F" alt="Versão"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6" alt="Windows 10 | 11">
   <a href="LICENSE"><img src="https://img.shields.io/github/license/brunokdalcastel/fragmo?color=555" alt="Licença MIT"></a>
 </p>
@@ -26,7 +26,7 @@ nuvem, sem telemetria.
 
 1. **[Baixe o instalador](https://github.com/brunokdalcastel/fragmo/releases/latest/download/Fragmo-Setup.exe)** (`Fragmo-Setup.exe`).
 2. Abra o arquivo baixado, escolha as opções (já vêm marcadas) e clique em **Instalar** e depois **Concluir**.
-3. Pronto: o ícone laranja aparece na bandeja, perto do relógio. Aperte **Print Screen** para capturar.
+3. Pronto: o ícone do Fragmo aparece na bandeja, perto do relógio. Aperte **Print Screen** para capturar.
 
 Não precisa de administrador nem do .NET. Por padrão o Fragmo já inicia junto com o Windows.
 
@@ -124,7 +124,7 @@ no cloud, no telemetry. The interface is available in English and Portuguese.
 
 1. **[Download the installer](https://github.com/brunokdalcastel/fragmo/releases/latest/download/Fragmo-Setup.exe)** (`Fragmo-Setup.exe`).
 2. Open the downloaded file, review the options (already checked) and click **Install**, then **Finish**.
-3. Done: the orange icon shows up in the tray, next to the clock. Press **Print Screen** to capture.
+3. Done: the Fragmo icon shows up in the tray, next to the clock. Press **Print Screen** to capture.
 
 No admin rights and no .NET needed. By default Fragmo starts with Windows.
 

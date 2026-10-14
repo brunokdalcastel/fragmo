@@ -7,7 +7,7 @@
 #endif
 
 [Setup]
-AppId={{7A932716-B3B9-45FF-B3DE-A1CA42E0D12A}
+AppId={{C9E49E11-BEE3-46AC-9C28-3E66293C297C}
 AppName=Fragmo
 AppVersion={#AppVersion}
 AppVerName=Fragmo {#AppVersion}

@@ -19,7 +19,7 @@ internal sealed class EditorToolbar : Control
 
     private static readonly Color[] QuickColors =
     [
-        ColorTranslator.FromHtml("#FF3B30"), ColorTranslator.FromHtml("#FF6A1A"),
+        ColorTranslator.FromHtml("#FF3B30"), Palette.Accent,
         ColorTranslator.FromHtml("#FFCC00"), ColorTranslator.FromHtml("#34C759"),
         ColorTranslator.FromHtml("#007AFF"), ColorTranslator.FromHtml("#AF52DE"),
         Color.FromArgb(0, 0, 0), Color.FromArgb(255, 255, 255),
@@ -600,7 +600,7 @@ internal sealed class EditorToolbar : Control
         public override Color ImageMarginGradientMiddle => theme.Background;
         public override Color ImageMarginGradientEnd => theme.Background;
         public override Color MenuBorder => theme.Border;
-        public override Color MenuItemBorder => theme.Accent;
+        public override Color MenuItemBorder => theme.AccentText;
         public override Color MenuItemSelected => theme.Surface;
         public override Color MenuItemSelectedGradientBegin => theme.Surface;
         public override Color MenuItemSelectedGradientEnd => theme.Surface;

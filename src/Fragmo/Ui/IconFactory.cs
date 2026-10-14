@@ -4,12 +4,10 @@ using Fragmo.Native;
 namespace Fragmo.Ui;
 
 /// <summary>
-/// Desenha o ícone do app em GDI+: quadrado arredondado laranja com um colchete de recorte branco.
+/// Desenha o ícone do app em GDI+: quadrado arredondado na cor de destaque com um colchete de recorte branco.
 /// </summary>
 internal static class IconFactory
 {
-    public static readonly Color Accent = ColorTranslator.FromHtml("#FF6A1A");
-
     public static Icon CreateAppIcon(int size)
     {
         using var bmp = new Bitmap(size, size, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
@@ -85,7 +83,7 @@ internal static class IconFactory
         float radius = s * 0.22f;
         var body = new RectangleF(0.5f, 0.5f, s - 1f, s - 1f);
         using (var path = RoundedRect(body, radius))
-        using (var fill = new SolidBrush(Accent))
+        using (var fill = new SolidBrush(Palette.Accent))
         {
             g.FillPath(fill, path);
         }

@@ -1,6 +1,7 @@
 using System.Drawing.Drawing2D;
 using Fragmo.Native;
 using Fragmo.Output;
+using Fragmo.Ui;
 
 namespace Fragmo.Pin;
 
@@ -17,7 +18,7 @@ internal sealed class PinWindow : Form
     private const double MinOpacity = 0.20;
     private const double OpacityStep = 0.10;
 
-    private static readonly Color Accent = Color.FromArgb(0xFF, 0x6A, 0x1A);
+    private static readonly Color Accent = Palette.Accent;
     private static readonly Point AnchorTopLeft = Point.Empty;
 
     private readonly Bitmap _image;

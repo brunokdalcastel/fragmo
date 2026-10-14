@@ -369,7 +369,7 @@ internal sealed class SettingsForm : Form
             Text = title,
             AutoSize = true,
             Font = new Font(Font.FontFamily, Font.Size + 2, FontStyle.Bold),
-            Tag = _theme.Accent,
+            Tag = _theme.AccentText,
             Margin = new Padding(0, 4, 0, 4),
         };
         panel.Controls.Add(header);
