@@ -4,15 +4,18 @@ using Fragmo.Ui;
 namespace Fragmo.Editor;
 
 /// <summary>
-/// Barra do editor desenhada à mão com o <see cref="Theme"/>. A vertical tem as ferramentas, a cor
-/// e a espessura; a horizontal tem desfazer/refazer e fixar/imprimir/copiar/salvar/fechar.
+/// Barra única do editor, horizontal e flutuante, desenhada à mão com o <see cref="Theme"/>:
+/// [tamanho da seleção] | ferramentas | cor e espessura | desfazer, refazer | fixar, imprimir, copiar, salvar, fechar.
 /// </summary>
 internal sealed class EditorToolbar : Control
 {
     private const int ButtonSize = 32;
     private const int IconInset = 8;
-    private const int BarPadding = 4;
-    private const int SeparatorSize = 9;
+    private const int BarPadding = 6;
+    private const int SeparatorSize = 11;
+    private const int CornerRadius = 10;
+    private const int ButtonRadius = 6;
+    private const int LabelPadding = 10;
     private const int TooltipDelayMs = 400;
     private const int TooltipDurationMs = 4000;
     private const int SwatchSize = 14;
@@ -29,13 +32,24 @@ internal sealed class EditorToolbar : Control
 
     private enum ButtonId
     {
-        Pen, Marker, Line, Arrow, Rectangle, Blur, Step, Text, Color, Thickness,
+        Pen, Line, Arrow, Rectangle, Marker, Text, Step, Blur, Color, Thickness,
         Undo, Redo, Pin, Print, Copy, Save, Close,
     }
+
+    // null = separador entre grupos.
+    private static readonly ButtonId?[] ButtonOrder =
+    [
+        ButtonId.Pen, ButtonId.Line, ButtonId.Arrow, ButtonId.Rectangle, ButtonId.Marker, ButtonId.Text,
+        ButtonId.Step, ButtonId.Blur, null,
+        ButtonId.Color, ButtonId.Thickness, null,
+        ButtonId.Undo, ButtonId.Redo, null,
+        ButtonId.Pin, ButtonId.Print, ButtonId.Copy, ButtonId.Save, ButtonId.Close,
+    ];
 
     private sealed record Item(ButtonId Id, Rectangle Bounds);
 
     private readonly Theme _theme;
+    private readonly Font _labelFont = new("Segoe UI", 9f);
     private readonly List<Item> _items = [];
     private readonly List<Rectangle> _separators = [];
     private readonly ToolTip _toolTip = new();
@@ -50,27 +64,23 @@ internal sealed class EditorToolbar : Control
     private bool _canRedo;
     private int _hover = -1;
     private int _pressed = -1;
+    private string _sizeText = string.Empty;
+    private Rectangle _labelBounds;
 
-    public EditorToolbar(Theme theme, Orientation orientation, StrokeStyle style)
+    public EditorToolbar(Theme theme, StrokeStyle style)
     {
         _theme = theme;
         _style = style;
-        Orientation = orientation;
 
-        SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint |
-                 ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+        // Fundo transparente: o WinForms pinta o overlay por trás, e os cantos arredondados ficam suaves.
+        SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer |
+                 ControlStyles.ResizeRedraw | ControlStyles.SupportsTransparentBackColor, true);
         SetStyle(ControlStyles.Selectable, false); // o teclado fica sempre no overlay
         TabStop = false;
         Cursor = Cursors.Default;
-        BackColor = theme.Background;
+        BackColor = Color.Transparent;
 
-        ButtonId?[] layout = orientation == Orientation.Vertical
-            ? [ButtonId.Pen, ButtonId.Marker, ButtonId.Line, ButtonId.Arrow, ButtonId.Rectangle, ButtonId.Blur,
-               ButtonId.Step, ButtonId.Text, null, ButtonId.Color, ButtonId.Thickness]
-            : [ButtonId.Undo, ButtonId.Redo, null, ButtonId.Pin, ButtonId.Print, null,
-               ButtonId.Copy, ButtonId.Save, ButtonId.Close];
-        BuildLayout(layout);
-
+        BuildLayout();
         _colorMenu = BuildColorMenu();
         _thicknessMenu = BuildThicknessMenu();
         _tooltipTimer.Tick += OnTooltipTick;
@@ -86,8 +96,6 @@ internal sealed class EditorToolbar : Control
     public event Action? SaveClicked;
     public event Action? CloseClicked;
 
-    public Orientation Orientation { get; }
-
     public void SetUndoRedo(bool canUndo, bool canRedo)
     {
         _canUndo = canUndo;
@@ -102,30 +110,45 @@ internal sealed class EditorToolbar : Control
         Invalidate();
     }
 
+    /// <summary>Mostra o tamanho da seleção no começo da barra; a largura da barra acompanha o texto.</summary>
+    public void SetSelectionSize(Size size)
+    {
+        string text = $"{size.Width} × {size.Height}";
+        if (text == _sizeText)
+        {
+            return;
+        }
+        _sizeText = text;
+        BuildLayout();
+        Invalidate();
+    }
+
     // ----- Layout -----
 
-    private void BuildLayout(ButtonId?[] layout)
+    private void BuildLayout()
     {
-        bool vertical = Orientation == Orientation.Vertical;
-        int pos = BarPadding;
-        foreach (ButtonId? id in layout)
+        _items.Clear();
+        _separators.Clear();
+
+        int x = BarPadding;
+        int labelWidth = TextRenderer.MeasureText(_sizeText.Length > 0 ? _sizeText : "0 × 0", _labelFont).Width + 2 * LabelPadding;
+        _labelBounds = new Rectangle(x, BarPadding, labelWidth, ButtonSize);
+        x += labelWidth;
+        _separators.Add(new Rectangle(x, BarPadding, SeparatorSize, ButtonSize));
+        x += SeparatorSize;
+
+        foreach (ButtonId? id in ButtonOrder)
         {
             if (id is null)
             {
-                _separators.Add(vertical
-                    ? new Rectangle(BarPadding, pos, ButtonSize, SeparatorSize)
-                    : new Rectangle(pos, BarPadding, SeparatorSize, ButtonSize));
-                pos += SeparatorSize;
+                _separators.Add(new Rectangle(x, BarPadding, SeparatorSize, ButtonSize));
+                x += SeparatorSize;
                 continue;
             }
-            _items.Add(new Item(id.Value, vertical
-                ? new Rectangle(BarPadding, pos, ButtonSize, ButtonSize)
-                : new Rectangle(pos, BarPadding, ButtonSize, ButtonSize)));
-            pos += ButtonSize;
+            _items.Add(new Item(id.Value, new Rectangle(x, BarPadding, ButtonSize, ButtonSize)));
+            x += ButtonSize;
         }
-        pos += BarPadding;
-        int thickness = ButtonSize + 2 * BarPadding;
-        Size = vertical ? new Size(thickness, pos) : new Size(pos, thickness);
+        Size = new Size(x + BarPadding, ButtonSize + 2 * BarPadding);
     }
 
     private int IndexAt(Point p) => _items.FindIndex(i => i.Bounds.Contains(p));
@@ -233,10 +256,7 @@ internal sealed class EditorToolbar : Control
             return;
         }
         Rectangle b = _items[_hover].Bounds;
-        Point at = Orientation == Orientation.Vertical
-            ? new Point(Width + 4, b.Top + 6)
-            : new Point(b.Left, Height + 4);
-        _toolTip.Show(TooltipFor(_items[_hover].Id), this, at, TooltipDurationMs);
+        _toolTip.Show(TooltipFor(_items[_hover].Id), this, new Point(b.Left, Height + 4), TooltipDurationMs);
     }
 
     private void Activate(Item item)
@@ -281,9 +301,7 @@ internal sealed class EditorToolbar : Control
         }
     }
 
-    private Point MenuPoint(Item item) => Orientation == Orientation.Vertical
-        ? new Point(Width, item.Bounds.Top)
-        : new Point(item.Bounds.Left, Height);
+    private Point MenuPoint(Item item) => new(item.Bounds.Left, Height);
 
     private void ApplyStyle(StrokeStyle style)
     {
@@ -369,37 +387,32 @@ internal sealed class EditorToolbar : Control
 
     // ----- Pintura -----
 
-    protected override void OnPaintBackground(PaintEventArgs e)
-    {
-        // Tudo é pintado em OnPaint.
-    }
-
     protected override void OnPaint(PaintEventArgs e)
     {
         Graphics g = e.Graphics;
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+
+        // O fundo transparente já trouxe o overlay; por cima, a barra arredondada.
+        using (GraphicsPath body = RoundedRect(new RectangleF(0.5f, 0.5f, Width - 1.5f, Height - 1.5f), CornerRadius))
         using (var background = new SolidBrush(_theme.Background))
-        {
-            g.FillRectangle(background, ClientRectangle);
-        }
         using (var border = new Pen(_theme.Border))
         {
-            g.DrawRectangle(border, 0, 0, Width - 1, Height - 1);
+            g.FillPath(background, body);
+            g.DrawPath(border, body);
+        }
+
+        using (var line = new Pen(_theme.Border))
+        {
             foreach (Rectangle s in _separators)
             {
-                if (Orientation == Orientation.Vertical)
-                {
-                    int y = s.Top + s.Height / 2;
-                    g.DrawLine(border, s.Left + 4, y, s.Right - 5, y);
-                }
-                else
-                {
-                    int x = s.Left + s.Width / 2;
-                    g.DrawLine(border, x, s.Top + 4, x, s.Bottom - 5);
-                }
+                int x = s.Left + s.Width / 2;
+                g.DrawLine(line, x, s.Top + 5, x, s.Bottom - 5);
             }
         }
 
-        g.SmoothingMode = SmoothingMode.AntiAlias;
+        TextRenderer.DrawText(g, _sizeText, _labelFont, _labelBounds, _theme.Foreground,
+            TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+
         for (int i = 0; i < _items.Count; i++)
         {
             Item item = _items[i];
@@ -415,11 +428,24 @@ internal sealed class EditorToolbar : Control
 
             if (back != _theme.Background)
             {
+                using GraphicsPath pill = RoundedRect(Rectangle.Inflate(item.Bounds, -1, -1), ButtonRadius);
                 using var brush = new SolidBrush(back);
-                g.FillRectangle(brush, Rectangle.Inflate(item.Bounds, -1, -1));
+                g.FillPath(brush, pill);
             }
             DrawIcon(g, item.Id, Rectangle.Inflate(item.Bounds, -IconInset, -IconInset), fore, back);
         }
+    }
+
+    private static GraphicsPath RoundedRect(RectangleF r, float radius)
+    {
+        float d = radius * 2;
+        var path = new GraphicsPath();
+        path.AddArc(r.Left, r.Top, d, d, 180, 90);
+        path.AddArc(r.Right - d, r.Top, d, d, 270, 90);
+        path.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
+        path.AddArc(r.Left, r.Bottom - d, d, d, 90, 90);
+        path.CloseFigure();
+        return path;
     }
 
     private static Color Blend(Color a, Color b, double amountOfA) => Color.FromArgb(
@@ -582,6 +608,7 @@ internal sealed class EditorToolbar : Control
         {
             _tooltipTimer.Dispose();
             _toolTip.Dispose();
+            _labelFont.Dispose();
             _colorMenu.Dispose();
             _thicknessMenu.Dispose();
             foreach (Bitmap swatch in _swatches)

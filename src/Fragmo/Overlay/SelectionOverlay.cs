@@ -26,7 +26,6 @@ internal sealed class SelectionOverlay : Form
     private const int CursorGap = 20;
     private const int LabelPadding = 4;
     private const int DirtyMargin = 4;
-    private const int ToolbarGap = 8;
     private const int MaxThickness = 20;
     private const int MinTextBoxWidth = 40;
 
@@ -59,8 +58,7 @@ internal sealed class SelectionOverlay : Form
     // Editor
     private ToolKind _tool = ToolKind.Select;
     private StrokeStyle _style;
-    private EditorToolbar? _toolsBar;
-    private EditorToolbar? _actionsBar;
+    private EditorToolbar? _toolbar;
     private bool _drawing;
     private Point _drawStart;
     private List<Point>? _penPoints;
@@ -147,7 +145,7 @@ internal sealed class SelectionOverlay : Form
         base.OnShown(e);
         if (_state == State.Selected)
         {
-            ShowToolbars();
+            ShowToolbar();
             UpdateCursor(_cursor);
         }
         Activate();
@@ -298,7 +296,7 @@ internal sealed class SelectionOverlay : Form
         Grip grip = _state == State.Selected ? SelectionGeometry.HitTest(_selection, e.Location, GripSize) : Grip.None;
         if (grip != Grip.None)
         {
-            HideToolbars();
+            HideToolbar();
             _activeGrip = grip;
             _dragStart = e.Location;
             _dragOriginal = _selection;
@@ -310,7 +308,7 @@ internal sealed class SelectionOverlay : Form
             return; // com uma ferramenta ativa, clicar fora da seleção não começa outra
         }
 
-        HideToolbars();
+        HideToolbar();
         _state = State.Dragging;
         _dragStart = e.Location;
         _selection = Rectangle.Empty;
@@ -373,7 +371,7 @@ internal sealed class SelectionOverlay : Form
             _state = State.Selected;
             UpdateCursor(e.Location);
             UpdateDirty();
-            ShowToolbars();
+            ShowToolbar();
         }
         else
         {
@@ -398,7 +396,7 @@ internal sealed class SelectionOverlay : Form
         _activeGrip = Grip.None;
         _selection = Rectangle.Empty;
         Cursor = Cursors.Cross;
-        HideToolbars();
+        HideToolbar();
         UpdateDirty();
     }
 
@@ -535,7 +533,7 @@ internal sealed class SelectionOverlay : Form
 
     private void OnHistoryChanged()
     {
-        _actionsBar?.SetUndoRedo(_history.CanUndo, _history.CanRedo);
+        _toolbar?.SetUndoRedo(_history.CanUndo, _history.CanRedo);
         if (HasSelection)
         {
             Invalidate(Rectangle.Inflate(_selection, GripSize + DirtyMargin, GripSize + DirtyMargin));
@@ -549,7 +547,7 @@ internal sealed class SelectionOverlay : Form
             CloseTextBox(commit: true);
         }
         _tool = tool;
-        _toolsBar?.SetTool(tool);
+        _toolbar?.SetTool(tool);
         UpdateCursor(_cursor);
     }
 
@@ -638,86 +636,45 @@ internal sealed class SelectionOverlay : Form
         }
     }
 
-    // ----- Barras de ferramentas -----
+    // ----- Barra de ferramentas -----
 
-    private void ShowToolbars()
+    private void ShowToolbar()
     {
-        if (_toolsBar is null || _actionsBar is null)
+        if (_toolbar is null)
         {
-            _toolsBar = new EditorToolbar(_theme, Orientation.Vertical, _style) { Visible = false };
-            _actionsBar = new EditorToolbar(_theme, Orientation.Horizontal, _style) { Visible = false };
-
-            _toolsBar.SetTool(_tool);
-            _toolsBar.ToolChanged += SelectTool;
-            _toolsBar.StrokeStyleChanged += OnToolbarStyleChanged;
-
-            _actionsBar.SetUndoRedo(_history.CanUndo, _history.CanRedo);
-            _actionsBar.UndoClicked += () => { CloseTextBox(commit: true); _history.Undo(); };
-            _actionsBar.RedoClicked += () => { CloseTextBox(commit: true); _history.Redo(); };
-            _actionsBar.PinClicked += () => Finish(OverlayResult.Pin);
-            _actionsBar.PrintClicked += () => Finish(OverlayResult.Print);
-            _actionsBar.CopyClicked += () => Finish(OverlayResult.Copy);
-            _actionsBar.SaveClicked += () => Finish(OverlayResult.Save);
-            _actionsBar.CloseClicked += () => Finish(OverlayResult.Cancel);
-
-            Controls.Add(_toolsBar);
-            Controls.Add(_actionsBar);
+            _toolbar = new EditorToolbar(_theme, _style) { Visible = false };
+            _toolbar.SetTool(_tool);
+            _toolbar.SetUndoRedo(_history.CanUndo, _history.CanRedo);
+            _toolbar.ToolChanged += SelectTool;
+            _toolbar.StrokeStyleChanged += OnToolbarStyleChanged;
+            _toolbar.UndoClicked += () => { CloseTextBox(commit: true); _history.Undo(); };
+            _toolbar.RedoClicked += () => { CloseTextBox(commit: true); _history.Redo(); };
+            _toolbar.PinClicked += () => Finish(OverlayResult.Pin);
+            _toolbar.PrintClicked += () => Finish(OverlayResult.Print);
+            _toolbar.CopyClicked += () => Finish(OverlayResult.Copy);
+            _toolbar.SaveClicked += () => Finish(OverlayResult.Save);
+            _toolbar.CloseClicked += () => Finish(OverlayResult.Cancel);
+            Controls.Add(_toolbar);
         }
 
-        PositionToolbars(_toolsBar, _actionsBar);
-        _toolsBar.Visible = true;
-        _actionsBar.Visible = true;
+        _toolbar.SetSelectionSize(_selection.Size);
+        _toolbar.Location = ToolbarPlacement.Place(_selection, _toolbar.Size, MonitorsInBitmap());
+        _toolbar.Visible = true;
     }
 
-    private void HideToolbars()
+    private void HideToolbar()
     {
-        if (_toolsBar is not null) _toolsBar.Visible = false;
-        if (_actionsBar is not null) _actionsBar.Visible = false;
+        if (_toolbar is not null) _toolbar.Visible = false;
     }
 
-    /// <summary>
-    /// Horizontal abaixo da seleção (à direita) e vertical à direita dela; quando não cabem no
-    /// monitor, trocam de lado e, em último caso, vão para dentro da seleção.
-    /// </summary>
-    private void PositionToolbars(EditorToolbar tools, EditorToolbar actions)
+    /// <summary>Área de cada monitor em coordenadas do bitmap.</summary>
+    private Rectangle[] MonitorsInBitmap()
     {
         Rectangle vs = _screen.VirtualBounds;
-        var corner = new Point(_selection.Right - 1 + vs.X, _selection.Bottom - 1 + vs.Y);
-        Rectangle monitor = Screen.FromPoint(corner).Bounds;
-        monitor.Offset(-vs.X, -vs.Y); // para coordenadas do bitmap
-
-        Size h = actions.Size;
-        int hx = _selection.Right - h.Width;
-        int hy = _selection.Bottom + ToolbarGap;
-        if (hy + h.Height > monitor.Bottom)
-        {
-            hy = _selection.Top - ToolbarGap - h.Height;
-            if (hy < monitor.Top)
-            {
-                hy = _selection.Bottom - ToolbarGap - h.Height;
-            }
-        }
-        actions.Location = new Point(
-            ClampToRange(hx, monitor.Left, monitor.Right - h.Width),
-            ClampToRange(hy, monitor.Top, monitor.Bottom - h.Height));
-
-        Size v = tools.Size;
-        int vx = _selection.Right + ToolbarGap;
-        int vy = _selection.Top;
-        if (vx + v.Width > monitor.Right)
-        {
-            vx = _selection.Left - ToolbarGap - v.Width;
-            if (vx < monitor.Left)
-            {
-                vx = _selection.Right - ToolbarGap - v.Width;
-            }
-        }
-        tools.Location = new Point(
-            ClampToRange(vx, monitor.Left, monitor.Right - v.Width),
-            ClampToRange(vy, monitor.Top, monitor.Bottom - v.Height));
+        return Screen.AllScreens
+            .Select(screen => new Rectangle(screen.Bounds.X - vs.X, screen.Bounds.Y - vs.Y, screen.Bounds.Width, screen.Bounds.Height))
+            .ToArray();
     }
-
-    private static int ClampToRange(int value, int min, int max) => Math.Max(min, Math.Min(value, max));
 
     // ----- Invalidação -----
 
@@ -728,7 +685,10 @@ internal sealed class SelectionOverlay : Form
         if (HasSelection)
         {
             now = UnionNonEmpty(now, Rectangle.Inflate(_selection, GripSize + DirtyMargin, GripSize + DirtyMargin));
-            now = UnionNonEmpty(now, Rectangle.Inflate(LabelBounds(), DirtyMargin, DirtyMargin));
+            if (SizeLabelVisible)
+            {
+                now = UnionNonEmpty(now, Rectangle.Inflate(LabelBounds(), DirtyMargin, DirtyMargin));
+            }
         }
         if (MagnifierVisible)
         {
@@ -794,7 +754,10 @@ internal sealed class SelectionOverlay : Form
         if (HasSelection)
         {
             DrawSelectionFrame(g);
-            DrawSizeLabel(g);
+            if (SizeLabelVisible)
+            {
+                DrawSizeLabel(g);
+            }
         }
 
         if (MagnifierVisible)
@@ -816,6 +779,12 @@ internal sealed class SelectionOverlay : Form
             g.FillRectangle(_accentBrush, p.X - GripSize / 2, p.Y - GripSize / 2, GripSize, GripSize);
         }
     }
+
+    /// <summary>
+    /// O tamanho fica na barra; enquanto a seleção é arrastada ou redimensionada a barra some,
+    /// e o tamanho aparece no canto da seleção.
+    /// </summary>
+    private bool SizeLabelVisible => HasSelection && (_state == State.Dragging || _activeGrip != Grip.None);
 
     private string SizeText => $"{_selection.Width} × {_selection.Height}";
 
