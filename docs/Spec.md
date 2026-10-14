@@ -338,11 +338,11 @@ public sealed class AppSettings
 
 ### Verification
 - [x] `dotnet build` sem avisos e `dotnet test` verde (67 testes).
-- [ ] Apertar `PrintScreen` (ou `Ctrl+Shift+S`, com balão explicando) abre o overlay em todos os monitores com a tela congelada e escurecida.
-- [ ] Arrastar mostra o retângulo, o tamanho `W × H` e a lupa com a cor do pixel; as alças redimensionam e o interior move.
-- [ ] `Enter` → colar no Paint mostra exatamente a área selecionada, sem borda e sem escurecimento.
-- [ ] `Ctrl+S` → salva o PNG com o nome `Fragmo_…png` na pasta escolhida.
-- [ ] `Esc` cancela sem efeito colateral.
+- [x] Apertar `PrintScreen` (ou `Ctrl+Shift+S`, com balão explicando) abre o overlay em todos os monitores com a tela congelada e escurecida.
+- [x] Arrastar mostra o retângulo, o tamanho `W × H` e a lupa com a cor do pixel; as alças redimensionam e o interior move.
+- [x] `Enter` → colar no Paint mostra exatamente a área selecionada, sem borda e sem escurecimento.
+- [x] `Ctrl+S` → salva o PNG com o nome `Fragmo_…png` na pasta escolhida.
+- [x] `Esc` cancela sem efeito colateral.
 - [ ] (Se houver 2 monitores) monitor à esquerda do principal e escalas 100% + 150%: a área salva bate com o que foi selecionado.
 
 ---
@@ -432,12 +432,12 @@ public sealed record StrokeStyle(Color Color, int Thickness);
 
 ### Verification
 - [x] `dotnet build` sem avisos e `dotnet test` verde (75 testes).
-- [ ] Depois de selecionar, as duas barras aparecem junto da seleção e não saem da tela (testar seleção no canto inferior direito).
-- [ ] Caneta, linha, seta, retângulo e texto desenham dentro da seleção, na cor e espessura escolhidas; `Shift` trava ângulo/quadrado.
-- [ ] `Ctrl+Z`/`Ctrl+Y` desfazem e refazem; os botões ficam desativados quando não há o que desfazer.
-- [ ] Copiar/salvar inclui as anotações e não inclui barras, alças nem véu.
-- [ ] A barra aparece no tema escuro (padrão); com `"theme": "light"` no `settings.json` ela fica clara.
-- [ ] As dicas das ferramentas aparecem em português e em inglês conforme `language`.
+- [x] Depois de selecionar, as duas barras aparecem junto da seleção e não saem da tela (testar seleção no canto inferior direito).
+- [x] Caneta, linha, seta, retângulo e texto desenham dentro da seleção, na cor e espessura escolhidas; `Shift` trava ângulo/quadrado.
+- [x] `Ctrl+Z`/`Ctrl+Y` desfazem e refazem; os botões ficam desativados quando não há o que desfazer.
+- [x] Copiar/salvar inclui as anotações e não inclui barras, alças nem véu.
+- [x] A barra aparece no tema escuro (padrão); com `"theme": "light"` no `settings.json` ela fica clara.
+- [x] As dicas das ferramentas aparecem em português e em inglês conforme `language`.
 
 ---
 
@@ -524,12 +524,12 @@ public sealed record StrokeStyle(Color Color, int Thickness);
 
 ### Verification
 - [x] `dotnet build` sem avisos e `dotnet test` verde (85 testes).
-- [ ] Desfoque esconde o texto de verdade (salvar e abrir a imagem); passos numeram 1, 2, 3 e reaproveitam o número depois de desfazer.
-- [ ] `Ctrl+T` fixa o recorte na tela; roda = zoom, `Ctrl+roda` = opacidade, arrastar move, `Esc` fecha.
-- [ ] `Ctrl+Shift+F` salva o monitor principal direto na pasta, com balão.
-- [ ] `Ctrl+Shift+W` abre o editor com a janela ativa já selecionada, sem a sombra.
-- [ ] `Ctrl+Shift+R` reabre com a última área; sem área anterior, abre a seleção normal.
-- [ ] `Ctrl+P` abre a impressão e a prévia mostra a imagem inteira.
+- [x] Desfoque esconde o texto de verdade (salvar e abrir a imagem); passos numeram 1, 2, 3 e reaproveitam o número depois de desfazer.
+- [x] `Ctrl+T` fixa o recorte na tela; roda = zoom, `Ctrl+roda` = opacidade, arrastar move, `Esc` fecha.
+- [x] `Ctrl+Shift+F` salva o monitor principal direto na pasta, com balão.
+- [x] `Ctrl+Shift+W` abre o editor com a janela ativa já selecionada, sem a sombra.
+- [x] `Ctrl+Shift+R` reabre com a última área; sem área anterior, abre a seleção normal.
+- [x] `Ctrl+P` abre a impressão e a prévia mostra a imagem inteira.
 
 ---
 
@@ -604,11 +604,11 @@ public sealed record StrokeStyle(Color Color, int Thickness);
 
 ### Verification
 - [x] `dotnet build` sem avisos e `dotnet test` verde (91 testes).
-- [ ] Trocar o atalho de área para `Ctrl+Alt+A` nas configurações funciona na hora, sem reiniciar; um atalho repetido é recusado.
-- [ ] "Iniciar com o Windows" cria/remove o valor em `HKCU\...\Run` (conferir no `regedit`) e o app abre na bandeja depois de reiniciar. *(criar/remover o valor conferido por teste descartável; falta reiniciar)*
-- [ ] Trocar para JPEG + qualidade 70 gera `.jpg` com o nome da prévia.
-- [ ] Tema Escuro/Claro/Sistema muda as barras e a tela de configurações.
-- [ ] Trocar o idioma para English muda o menu da bandeja, a tela de configurações e as dicas do editor sem reiniciar o app.
+- [x] Trocar o atalho de área para `Ctrl+Alt+A` nas configurações funciona na hora, sem reiniciar; um atalho repetido é recusado.
+- [x] "Iniciar com o Windows" cria/remove o valor em `HKCU\...\Run` (conferir no `regedit`) e o app abre na bandeja depois de reiniciar.
+- [x] Trocar para JPEG + qualidade 70 gera `.jpg` com o nome da prévia.
+- [x] Tema Escuro/Claro/Sistema muda as barras e a tela de configurações.
+- [x] Trocar o idioma para English muda o menu da bandeja, a tela de configurações e as dicas do editor sem reiniciar o app.
 - [x] `./publish.ps1` gera um único `artifacts/publish/Fragmo.exe` (49 MB) com o ícone laranja. *(rodar numa máquina sem .NET: não testado)*
 - [ ] Monitor de rede (ex.: `Resource Monitor`) não mostra nenhuma conexão do `Fragmo.exe`.
 
