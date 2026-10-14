@@ -38,6 +38,21 @@ internal static class Strings
         $"{AppName} {VersionText}\n\nCaptura de tela 100% local, sem telemetria.",
         $"{AppName} {VersionText}\n\nScreen capture, 100% local, no telemetry.");
 
+    public static string PrintScreenTaken => T(
+        "A tecla Print Screen está em uso pelo Windows. Usando Ctrl+Shift+S. Para liberar: Configurações › Acessibilidade › Teclado › desative \"Usar a tecla Print Screen para abrir a captura de tela\".",
+        "The Print Screen key is taken by Windows. Using Ctrl+Shift+S. To free it: Settings › Accessibility › Keyboard › turn off \"Use the Print screen key to open screen capture\".");
+
+    public static string HotkeyFailed => T(
+        "Não foi possível registrar o atalho de captura. Use \"Capturar área\" no menu da bandeja.",
+        "Could not register the capture hotkey. Use \"Capture area\" in the tray menu.");
+
+    public static string Copied => T("Imagem copiada", "Image copied");
+    public static string SavedTo => T("Salvo em {0}", "Saved to {0}");
+    public static string CaptureError => T("Falha na captura: {0}", "Capture failed: {0}");
+
+    // Igual nos dois idiomas, por isso é constante e não passa por T().
+    public const string SaveFilter = "PNG|*.png|JPEG|*.jpg|Bitmap|*.bmp";
+
     public static string UnexpectedError => T(
         "Ocorreu um erro inesperado. Detalhes gravados em {0}.\n\n{1}",
         "An unexpected error occurred. Details were written to {0}.\n\n{1}");

@@ -230,17 +230,17 @@ public sealed class AppSettings
 ## Phase 2: Captura + overlay de seleção + copiar/salvar (MVP)
 
 ### `src/Fragmo/Native/User32.cs`
-- Action: Modify
+- Action: Modify [x]
 - Instruction: Acrescentar `RegisterHotKey`, `UnregisterHotKey`, `GetForegroundWindow`, `SetWindowPos`, `GetCursorPos` e as constantes `WM_HOTKEY = 0x0312`, `WM_DPICHANGED = 0x02E0`, `MOD_ALT = 1`, `MOD_CONTROL = 2`, `MOD_SHIFT = 4`, `MOD_WIN = 8`, `MOD_NOREPEAT = 0x4000`, `SWP_NOZORDER = 0x4`, `SWP_NOACTIVATE = 0x10`.
 
 ### `src/Fragmo/Hotkeys/HotkeyBinding.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: `public readonly record struct HotkeyBinding(HotkeyModifiers Modifiers, Keys Key)` com `[Flags] enum HotkeyModifiers { None = 0, Alt = 1, Control = 2, Shift = 4, Win = 8 }` (valores iguais aos `MOD_*`).
   - `static bool TryParse(string text, out HotkeyBinding binding)`: separa por `+`, ignora espaços e maiúsculas/minúsculas; aceita `Ctrl`/`Control`, `Alt`, `Shift`, `Win`; a última parte é a tecla (`Enum.TryParse<Keys>`, aceitando `PrintScreen` como `Keys.PrintScreen`). Rejeita: texto vazio, tecla ausente, tecla que é só modificador, modificador repetido.
   - `override string ToString()` na ordem fixa `Ctrl+Alt+Shift+Win+Tecla` (o parse do resultado deve voltar ao mesmo valor).
 
 ### `src/Fragmo/Hotkeys/HotkeyManager.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: `internal sealed class HotkeyManager : NativeWindow, IDisposable`.
   - No construtor chama `CreateHandle(new CreateParams { Parent = new IntPtr(-3) })` (`HWND_MESSAGE`, janela só de mensagens).
   - `bool TryRegister(HotkeyAction action, HotkeyBinding binding)`: id = `(int)action + 1`; desregistra o anterior desse id; chama `RegisterHotKey(Handle, id, (uint)binding.Modifiers | MOD_NOREPEAT, (uint)binding.Key)`; devolve `false` se falhar (sem lançar exceção).
@@ -249,20 +249,20 @@ public sealed class AppSettings
   - `enum HotkeyAction { CaptureArea, CaptureFullScreen, CaptureWindow, RepeatLastArea }` no mesmo arquivo.
 
 ### `src/Fragmo/Capture/ScreenCapturer.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: `internal static class ScreenCapturer`.
   - `CapturedScreen CaptureVirtualScreen()`: `var vs = SystemInformation.VirtualScreen;` bitmap `Format32bppArgb` do tamanho `vs.Size`, `CopyFromScreen(vs.Left, vs.Top, 0, 0, vs.Size, CopyPixelOperation.SourceCopy)`.
   - `sealed record CapturedScreen(Bitmap Image, Rectangle VirtualBounds) : IDisposable` (guarda a origem, que pode ser negativa).
   - `Bitmap Crop(Bitmap source, Rectangle bitmapRect)`: `source.Clone(rect, PixelFormat.Format32bppArgb)` depois de `Intersect` com os limites do bitmap; lança `ArgumentException` se a interseção ficar vazia.
 
 ### `src/Fragmo/Capture/CoordinateMapper.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: `public static class CoordinateMapper` (lógica pura, risco R3):
   - `Point ScreenToBitmap(Point screen, Rectangle virtualBounds)` → `new(screen.X - virtualBounds.X, screen.Y - virtualBounds.Y)`.
   - `Rectangle BitmapToScreen(Rectangle r, Rectangle virtualBounds)` → deslocamento inverso.
 
 ### `src/Fragmo/Overlay/SelectionGeometry.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: `public static class SelectionGeometry` (lógica pura):
   - `Rectangle FromPoints(Point a, Point b)` → retângulo normalizado (aceita arrasto em qualquer direção).
   - `Rectangle Clamp(Rectangle r, Size bounds)` → limita aos limites do bitmap.
@@ -273,7 +273,7 @@ public sealed class AppSettings
   - `Rectangle MagnifierSource(Point p, int radius)` → `new(p.X - radius, p.Y - radius, 2*radius+1, 2*radius+1)`.
 
 ### `src/Fragmo/Overlay/SelectionOverlay.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: `internal sealed class SelectionOverlay : Form`.
   - Construtor `(CapturedScreen screen, AppSettings settings)`. Estilo: `FormBorderStyle.None`, `ShowInTaskbar = false`, `TopMost = true`, `StartPosition = Manual`, `AutoScaleMode = None`, `KeyPreview = true`, `Cursor = Cursors.Cross`, `SetStyle(AllPaintingInWmPaint | OptimizedDoubleBuffer | UserPaint, true)`.
   - Em `OnHandleCreated`: `SetWindowPos(Handle, …, vs.X, vs.Y, vs.Width, vs.Height, SWP_NOZORDER | SWP_NOACTIVATE)` para posicionar em pixels físicos.
@@ -287,13 +287,13 @@ public sealed class AppSettings
   - Depois de `Show`, chamar `Activate()` e `Focus()` para receber o teclado.
 
 ### `src/Fragmo/Output/FileNameBuilder.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: `public static class FileNameBuilder` (lógica pura):
   - `string Build(string prefix, DateTime now, ImageFormatKind fmt)` → `"{prefix}_{now:yyyy-MM-dd_HHmmss}.{ext}"` (`png`/`jpg`/`bmp`); remove de `prefix` os caracteres de `Path.GetInvalidFileNameChars()`; prefixo vazio vira `Fragmo`.
   - `string MakeUnique(string folder, string fileName, Func<string, bool> exists)` → se existir, acrescenta `_2`, `_3`… antes da extensão.
 
 ### `src/Fragmo/Output/OutputService.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: `internal sealed class OutputService(AppSettings settings)`.
   - `void CopyToClipboard(Bitmap img)`: `Clipboard.SetImage` dentro de um laço de até 5 tentativas com 50 ms entre elas (a área de transferência pode estar presa por outro processo).
   - `string? Save(Bitmap img, IWin32Window? owner)`: se `AskWhereToSave`, abre `SaveFileDialog` (pasta inicial `SaveFolder`, nome do `FileNameBuilder`, filtro PNG/JPG/BMP com o formato padrão selecionado); caso contrário grava direto (`SaveDirect`). Devolve o caminho ou `null` se cancelar.
@@ -301,42 +301,43 @@ public sealed class AppSettings
   - `void WriteImage(Bitmap img, string path, ImageFormatKind fmt)`: JPEG via `ImageCodecInfo` + `EncoderParameter(Encoder.Quality, settings.JpegQuality)`; `ImageFormatKind FormatFromExtension(string path)`.
 
 ### `src/Fragmo/Capture/CaptureWorkflow.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: `internal sealed class CaptureWorkflow(AppSettings settings, SettingsStore store, OutputService output, TrayContext tray)`.
   - Campo `bool _busy` para ignorar atalhos enquanto o overlay está aberto.
   - `void CaptureArea()`: `using var screen = ScreenCapturer.CaptureVirtualScreen();` (capturar **antes** de mostrar o overlay) → `using var overlay = new SelectionOverlay(screen, settings); overlay.ShowDialog();` → conforme `Result`: `Crop` + `CopyToClipboard` (balão "Copiado") ou `Save` (balão com o caminho). Grava `settings.LastRegion` (em coordenadas de tela, via `CoordinateMapper.BitmapToScreen`) e chama `store.Save`.
   - Erros: `try/catch` que mostra `tray.ShowError(ex.Message)`; `_busy` volta a `false` no `finally`.
 
 ### `src/Fragmo/TrayContext.cs`
-- Action: Modify
+- Action: Modify [x]
 - Instruction: Criar `HotkeyManager`, `OutputService` e `CaptureWorkflow`. Registrar `CaptureArea`: tentar `settings.Hotkeys.CaptureArea`; se falhar, tentar `CaptureAreaFallback` e mostrar `Strings.PrintScreenTaken` (ex.: "Print Screen está em uso pelo Windows. Usando Ctrl+Shift+S. Para liberar: Configurações › Acessibilidade › Teclado › desative 'Usar a tecla Print Screen…'"); se os dois falharem, `Strings.HotkeyFailed`. Ativar "Capturar área" no menu e no duplo clique do ícone. Dispor o `HotkeyManager` em `ExitThreadCore`.
 
 ### `src/Fragmo/Strings.cs`
-- Action: Modify
+- Action: Modify [x]
 - Instruction: Acrescentar `PrintScreenTaken`, `HotkeyFailed`, `Copied = "Imagem copiada"`, `SavedTo = "Salvo em {0}"`, `SaveFilter = "PNG|*.png|JPEG|*.jpg|Bitmap|*.bmp"`, `CaptureError`.
+- Nota da implementação: `SaveFilter` virou `const` (é igual nos dois idiomas e o `StringsTests` exige texto diferente em PT/EN para as propriedades).
 
 ### `tests/Fragmo.Tests/HotkeyBindingTests.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: `[Theory]` para entradas válidas (`"Ctrl+Shift+S"`, `"ctrl + shift + s"`, `"PrintScreen"`, `"Alt+F1"`, `"Win+Shift+X"`) e inválidas (`""`, `"Ctrl+"`, `"Ctrl+Shift"`, `"Ctrl+Ctrl+A"`, `"Foo+A"`); teste de ida e volta `TryParse(b.ToString())`.
 
 ### `tests/Fragmo.Tests/SelectionGeometryTests.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: `FromPoints` nas 4 direções de arrasto; `Clamp` com retângulo parcialmente fora; `HitTest` em cada canto, borda, interior e fora; `Resize` cruzando a borda oposta (largura continua positiva); `Move` encostado na borda.
 
 ### `tests/Fragmo.Tests/CoordinateMapperTests.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: Tela virtual começando em `(-1920, -200)`: `ScreenToBitmap(new(-1920,-200))` → `(0,0)`; `ScreenToBitmap(new(0,0))` → `(1920,200)`; ida e volta com `BitmapToScreen`.
 
 ### `tests/Fragmo.Tests/FileNameBuilderTests.cs`
-- Action: Create
+- Action: Create [x]
 - Instruction: nome esperado para `2026-10-14 15:30:12` em cada formato; prefixo com `:`/`?` limpo; prefixo vazio; `MakeUnique` com `_2` e `_3` usando um `exists` falso.
 
 ### Git
-- Action: Create
+- Action: Create [x]
 - Instruction: commit `feat: captura de área com overlay, copiar e salvar (fase 2)`.
 
 ### Verification
-- [ ] `dotnet build` sem avisos e `dotnet test` verde.
+- [x] `dotnet build` sem avisos e `dotnet test` verde (67 testes).
 - [ ] Apertar `PrintScreen` (ou `Ctrl+Shift+S`, com balão explicando) abre o overlay em todos os monitores com a tela congelada e escurecida.
 - [ ] Arrastar mostra o retângulo, o tamanho `W × H` e a lupa com a cor do pixel; as alças redimensionam e o interior move.
 - [ ] `Enter` → colar no Paint mostra exatamente a área selecionada, sem borda e sem escurecimento.
