@@ -34,6 +34,7 @@ internal sealed class SettingsForm : Form
     private readonly CheckBox _showMagnifier = new() { AutoSize = true };
     private readonly ComboBox _themeBox = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 160 };
     private readonly ComboBox _language = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 160 };
+    private Button? _okButton;
 
     private int _focusedHotkeyBoxes;
     private bool _reopen;
@@ -161,12 +162,11 @@ internal sealed class SettingsForm : Form
             ShowHotkeyFailures([]);
         };
 
-        var ok = new Button { Text = Strings.ButtonOk, AutoSize = true, MinimumSize = new Size(80, 0), Tag = _theme.Accent };
+        var ok = _okButton = new Button { Text = Strings.ButtonOk, AutoSize = true, MinimumSize = new Size(80, 0), Tag = _theme.Accent };
         ok.Click += (_, _) => OnOk();
         var cancel = new Button { Text = Strings.ButtonCancel, AutoSize = true, MinimumSize = new Size(80, 0), DialogResult = DialogResult.Cancel };
         AcceptButton = ok;
         CancelButton = cancel;
-        ActiveControl = ok; // foco inicial fora das caixas de atalho, para não suspender os atalhos ao abrir
 
         var right = new FlowLayoutPanel { AutoSize = true, FlowDirection = FlowDirection.LeftToRight, Anchor = AnchorStyles.Right, WrapContents = false };
         right.Controls.Add(ok);
@@ -303,6 +303,14 @@ internal sealed class SettingsForm : Form
         {
             CapturingHotkeyChanged?.Invoke(isCapturing);
         }
+    }
+
+    // Foco inicial fora das caixas de atalho, para não suspender os atalhos ao abrir.
+    // Só pode ser feito com a janela visível: no construtor o WinForms recusa (ArgumentException).
+    protected override void OnShown(EventArgs e)
+    {
+        base.OnShown(e);
+        _okButton?.Focus();
     }
 
     protected override void OnFormClosed(FormClosedEventArgs e)
