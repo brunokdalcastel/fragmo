@@ -671,6 +671,7 @@ public sealed record StrokeStyle(Color Color, int Thickness);
   normalmente, a menos que haja captura em edição, imagem fixada ou configurações abertas; aí o instalador avisa e o
   usuário escolhe tentar de novo, fechar à força ou cancelar. Em modo silencioso nunca força.
 - `Ctrl+Shift+S` passa a ficar sempre registrado junto com a Print Screen (`HotkeyAction.CaptureAreaAlt`): o Windows pode aceitar o registro da Print Screen e mesmo assim não entregar a tecla.
+- 0.3.1: com a Print Screen sozinha registrada, `HotkeyManager` também instala um gancho de teclado (`WH_KEYBOARD_LL`) que dispara a captura e segura a tecla; combinações com modificadores passam direto. Decisão pura em `PrintScreenKeyFilter` (testes: `PrintScreenKeyFilterTests`). O gancho é reinstalado a cada minuto, porque o Windows o desliga em silêncio se ele demorar a responder.
 
 ### Verification
 - [x] Ponta a ponta com OCR real: 4 itens desfocados, CPF inválido mantido, um Ctrl+Z desfaz o lote.

@@ -3,7 +3,7 @@
 ; Instala só para o usuário atual, sem pedir administrador, em %LOCALAPPDATA%\Programs\Fragmo.
 
 #ifndef AppVersion
-  #define AppVersion "0.3.0"
+  #define AppVersion "0.3.1"
 #endif
 
 [Setup]

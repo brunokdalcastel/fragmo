@@ -128,8 +128,7 @@ sensíveis são ocultados sozinhos ao capturar.
 **A tecla Print Screen abre a ferramenta do Windows?** No Windows 11 ela vem reservada para a captura do próprio
 sistema. O `Ctrl+Shift+S` funciona sempre, então você nunca fica sem atalho; para liberar também a Print Screen:
 **Configurações do Windows › Acessibilidade › Teclado** › desative *"Usar a tecla Print Screen para abrir a captura
-de tela"*. Depois feche o Fragmo (bandeja › Sair) e abra de novo. Se a tecla continuar sem abrir nada, saia da conta
-do Windows e entre de novo: algumas versões só aplicam essa opção no próximo login.
+de tela"*. Depois feche o Fragmo (bandeja › Sair) e abra de novo.
 
 ### Atualizar e desinstalar
 
@@ -269,8 +268,7 @@ can pick the folder, format, file name prefix, theme, language and whether sensi
 **Print Screen opens the Windows tool instead?** On Windows 11 the key is reserved for the system's own screen capture;
 `Ctrl+Shift+S` always works, so you are never left without a hotkey. To free Print Screen too: **Windows Settings › Accessibility ›
 Keyboard** › turn off *"Use the Print screen key to open screen capture"*. Then exit Fragmo (tray › Exit) and start
-it again. If the key still does nothing, sign out of Windows and back in: some versions only apply this option at the
-next sign-in.
+it again.
 
 ### Update and uninstall
 
