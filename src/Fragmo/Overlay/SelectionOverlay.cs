@@ -29,7 +29,7 @@ internal sealed class SelectionOverlay : Form
     private const int DirtyMargin = 4;
     private const int MaxThickness = 20;
     private const int MinTextBoxWidth = 40;
-    private const int AutoBlurPadding = 3;
+    private const int AutoRedactPadding = 3;
 
     // Borda, alças e lupa ficam sobre o véu escuro: usa o tom claro do destaque.
     private static readonly Color Accent = Palette.AccentLight;
@@ -69,7 +69,7 @@ internal sealed class SelectionOverlay : Form
     private TextBox? _textBox; // criada uma vez e reaproveitada; é descartada junto com o form
     private Font? _textFont;
     private bool _editingText;
-    private bool _autoBlurRunning;
+    private bool _autoRedactRunning;
     private Point _textOrigin;
 
     /// <param name="initialSelection">
@@ -157,7 +157,7 @@ internal sealed class SelectionOverlay : Form
         {
             ShowToolbar();
             UpdateCursor(_cursor);
-            AutoBlurIfEnabled();
+            AutoRedactIfEnabled();
         }
         Activate();
         Focus();
@@ -236,7 +236,7 @@ internal sealed class SelectionOverlay : Form
                 Finish(OverlayResult.CopyText);
                 return true;
             case Keys.X when !_drawing:
-                _ = AutoBlurAsync(automatic: false);
+                _ = AutoRedactAsync(automatic: false);
                 return true;
             case Keys.Control | Keys.Z:
                 if (!_drawing) _history.Undo();
@@ -256,6 +256,7 @@ internal sealed class SelectionOverlay : Form
             Keys.T => ToolKind.Text,
             Keys.M => ToolKind.Marker,
             Keys.B => ToolKind.Blur,
+            Keys.H => ToolKind.Redact,
             Keys.N => ToolKind.Step,
             Keys.V => ToolKind.Select,
             _ => null,
@@ -389,7 +390,7 @@ internal sealed class SelectionOverlay : Form
             UpdateCursor(e.Location);
             UpdateDirty();
             ShowToolbar();
-            AutoBlurIfEnabled();
+            AutoRedactIfEnabled();
         }
         else
         {
@@ -528,6 +529,8 @@ internal sealed class SelectionOverlay : Form
                 shift ? SquareFrom(_drawStart, current) : SelectionGeometry.FromPoints(_drawStart, current)),
             ToolKind.Blur => new BlurAnnotation(
                 shift ? SquareFrom(_drawStart, current) : SelectionGeometry.FromPoints(_drawStart, current)),
+            ToolKind.Redact => new RedactAnnotation(
+                shift ? SquareFrom(_drawStart, current) : SelectionGeometry.FromPoints(_drawStart, current)),
             _ => null,
         };
     }
@@ -654,28 +657,28 @@ internal sealed class SelectionOverlay : Form
         }
     }
 
-    // ----- Desfoque automático -----
+    // ----- Ocultar dados sensíveis -----
 
-    private void AutoBlurIfEnabled()
+    private void AutoRedactIfEnabled()
     {
-        if (_settings.AutoBlurOnCapture)
+        if (_settings.AutoRedactOnCapture)
         {
-            _ = AutoBlurAsync(automatic: true);
+            _ = AutoRedactAsync(automatic: true);
         }
     }
 
     /// <summary>
-    /// Lê o texto da seleção com o OCR do Windows e desfoca os dados sensíveis encontrados, todos numa
-    /// única etapa de desfazer. Partes já desfocadas não são desfocadas de novo (vale ao redimensionar).
+    /// Lê o texto da seleção com o OCR do Windows e cobre com tarja opaca os dados sensíveis encontrados,
+    /// todos numa única etapa de desfazer. Partes já cobertas não são cobertas de novo (vale ao redimensionar).
     /// </summary>
-    private async Task AutoBlurAsync(bool automatic)
+    private async Task AutoRedactAsync(bool automatic)
     {
-        if (_autoBlurRunning || !HasSelection || _state != State.Selected)
+        if (_autoRedactRunning || !HasSelection || _state != State.Selected)
         {
             return;
         }
 
-        _autoBlurRunning = true;
+        _autoRedactRunning = true;
         UseWaitCursor = true;
         try
         {
@@ -703,23 +706,23 @@ internal sealed class SelectionOverlay : Form
                 .Select(r =>
                 {
                     r.Offset(area.Location);
-                    return Rectangle.Intersect(Rectangle.Inflate(r, AutoBlurPadding, AutoBlurPadding), area);
+                    return Rectangle.Intersect(Rectangle.Inflate(r, AutoRedactPadding, AutoRedactPadding), area);
                 })
-                .Where(r => !r.IsEmpty && !AlreadyBlurred(r))
+                .Where(r => !r.IsEmpty && !AlreadyRedacted(r))
                 .ToList();
 
             if (targets.Count == 0)
             {
                 if (!automatic)
                 {
-                    _notify?.Invoke(Strings.AutoBlurNone);
+                    _notify?.Invoke(Strings.AutoRedactNone);
                 }
                 return;
             }
 
             CloseTextBox(commit: true);
-            _history.Add(new AnnotationGroup(targets.Select(r => (IAnnotation)new BlurAnnotation(r)).ToList()));
-            _notify?.Invoke(Strings.ItemsBlurred(targets.Count));
+            _history.Add(new AnnotationGroup(targets.Select(r => (IAnnotation)new RedactAnnotation(r)).ToList()));
+            _notify?.Invoke(Strings.ItemsRedacted(targets.Count));
         }
         catch (Exception ex)
         {
@@ -727,7 +730,7 @@ internal sealed class SelectionOverlay : Form
         }
         finally
         {
-            _autoBlurRunning = false;
+            _autoRedactRunning = false;
             if (!IsDisposed)
             {
                 UseWaitCursor = false;
@@ -735,19 +738,20 @@ internal sealed class SelectionOverlay : Form
         }
     }
 
-    private bool AlreadyBlurred(Rectangle r) => BlurredAreas(_history.Items).Any(b => b.Contains(r));
+    // Só a tarja conta: uma área desfocada à mão ainda recebe a tarja, que é a proteção de verdade.
+    private bool AlreadyRedacted(Rectangle r) => RedactedAreas(_history.Items).Any(b => b.Contains(r));
 
-    private static IEnumerable<Rectangle> BlurredAreas(IEnumerable<IAnnotation> items)
+    private static IEnumerable<Rectangle> RedactedAreas(IEnumerable<IAnnotation> items)
     {
         foreach (IAnnotation item in items)
         {
-            if (item is BlurAnnotation blur)
+            if (item is RedactAnnotation redact)
             {
-                yield return blur.Rect;
+                yield return redact.Rect;
             }
             else if (item is AnnotationGroup group)
             {
-                foreach (Rectangle inner in BlurredAreas(group.Items))
+                foreach (Rectangle inner in RedactedAreas(group.Items))
                 {
                     yield return inner;
                 }
@@ -772,7 +776,7 @@ internal sealed class SelectionOverlay : Form
             _toolbar.PrintClicked += () => Finish(OverlayResult.Print);
             _toolbar.CopyClicked += () => Finish(OverlayResult.Copy);
             _toolbar.CopyTextClicked += () => Finish(OverlayResult.CopyText);
-            _toolbar.AutoBlurClicked += () => _ = AutoBlurAsync(automatic: false);
+            _toolbar.AutoRedactClicked += () => _ = AutoRedactAsync(automatic: false);
             _toolbar.SaveClicked += () => Finish(OverlayResult.Save);
             _toolbar.CloseClicked += () => Finish(OverlayResult.Cancel);
             Controls.Add(_toolbar);

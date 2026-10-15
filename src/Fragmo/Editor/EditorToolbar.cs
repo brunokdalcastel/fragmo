@@ -32,7 +32,7 @@ internal sealed class EditorToolbar : Control
 
     private enum ButtonId
     {
-        Pen, Line, Arrow, Rectangle, Marker, Text, Step, Blur, AutoBlur, Color, Thickness,
+        Pen, Line, Arrow, Rectangle, Marker, Text, Step, Blur, Redact, AutoRedact, Color, Thickness,
         Undo, Redo, Pin, Print, Copy, CopyText, Save, Close,
     }
 
@@ -40,7 +40,7 @@ internal sealed class EditorToolbar : Control
     private static readonly ButtonId?[] ButtonOrder =
     [
         ButtonId.Pen, ButtonId.Line, ButtonId.Arrow, ButtonId.Rectangle, ButtonId.Marker, ButtonId.Text,
-        ButtonId.Step, ButtonId.Blur, ButtonId.AutoBlur, null,
+        ButtonId.Step, ButtonId.Blur, ButtonId.Redact, ButtonId.AutoRedact, null,
         ButtonId.Color, ButtonId.Thickness, null,
         ButtonId.Undo, ButtonId.Redo, null,
         ButtonId.Pin, ButtonId.Print, ButtonId.Copy, ButtonId.CopyText, ButtonId.Save, ButtonId.Close,
@@ -94,7 +94,7 @@ internal sealed class EditorToolbar : Control
     public event Action? PrintClicked;
     public event Action? CopyClicked;
     public event Action? CopyTextClicked;
-    public event Action? AutoBlurClicked;
+    public event Action? AutoRedactClicked;
     public event Action? SaveClicked;
     public event Action? CloseClicked;
 
@@ -167,6 +167,7 @@ internal sealed class EditorToolbar : Control
         ButtonId.Pen => ToolKind.Pen,
         ButtonId.Marker => ToolKind.Marker,
         ButtonId.Blur => ToolKind.Blur,
+        ButtonId.Redact => ToolKind.Redact,
         ButtonId.Step => ToolKind.Step,
         ButtonId.Line => ToolKind.Line,
         ButtonId.Arrow => ToolKind.Arrow,
@@ -180,7 +181,8 @@ internal sealed class EditorToolbar : Control
         ButtonId.Pen => Strings.ToolPen,
         ButtonId.Marker => Strings.ToolMarker,
         ButtonId.Blur => Strings.ToolBlur,
-        ButtonId.AutoBlur => Strings.ToolAutoBlur,
+        ButtonId.Redact => Strings.ToolRedact,
+        ButtonId.AutoRedact => Strings.ToolAutoRedact,
         ButtonId.Step => Strings.ToolStep,
         ButtonId.Line => Strings.ToolLine,
         ButtonId.Arrow => Strings.ToolArrow,
@@ -299,8 +301,8 @@ internal sealed class EditorToolbar : Control
             case ButtonId.CopyText:
                 CopyTextClicked?.Invoke();
                 break;
-            case ButtonId.AutoBlur:
-                AutoBlurClicked?.Invoke();
+            case ButtonId.AutoRedact:
+                AutoRedactClicked?.Invoke();
                 break;
             case ButtonId.Save:
                 SaveClicked?.Invoke();
@@ -517,19 +519,23 @@ internal sealed class EditorToolbar : Control
                 break;
             }
 
-            case ButtonId.AutoBlur:
-            {
-                // Quadriculado menor no canto e uma faísca: o desfoque que se aplica sozinho.
-                int cell = r.Width / 5;
-                for (int row = 0; row < 3; row++)
+            case ButtonId.Redact:
+                // Linha de texto com uma tarja cheia no meio.
+                using (var thin = new Pen(fore, 1.5f))
                 {
-                    for (int col = 0; col < 3; col++)
-                    {
-                        if ((row + col) % 2 == 0)
-                        {
-                            g.FillRectangle(brush, l + col * cell, b - (3 - row) * cell, cell, cell);
-                        }
-                    }
+                    g.DrawLine(thin, l, t + 2, rt, t + 2);
+                    g.DrawLine(thin, l, b - 2, rt - 5, b - 2);
+                }
+                g.FillRectangle(brush, l, t + 5, r.Width, r.Height - 10);
+                break;
+
+            case ButtonId.AutoRedact:
+            {
+                // Tarja menor embaixo e uma faísca: a tarja que se aplica sozinha.
+                g.FillRectangle(brush, l, b - 7, r.Width - 3, 6);
+                using (var thin = new Pen(fore, 1.5f))
+                {
+                    g.DrawLine(thin, l, t + 6, rt - 9, t + 6);
                 }
                 float sx = rt - 4f, sy = t + 4f;
                 g.FillPolygon(brush, new PointF[]

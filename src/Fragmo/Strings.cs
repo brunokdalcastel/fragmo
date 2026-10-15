@@ -71,7 +71,8 @@ internal static class Strings
     public static string ToolMarker => T("Marcador (M)", "Highlighter (M)");
     public static string ToolBlur => T("Desfoque (B)", "Blur (B)");
     public static string ToolStep => T("Passos numerados (N)", "Numbered steps (N)");
-    public static string ToolAutoBlur => T("Desfoque automático de dados sensíveis (X)", "Auto-blur sensitive data (X)");
+    public static string ToolRedact => T("Tarja opaca (H)", "Redact (H)");
+    public static string ToolAutoRedact => T("Ocultar dados sensíveis (X)", "Hide sensitive data (X)");
     public static string ToolColor => T("Cor", "Color");
     public static string ToolThickness => T("Espessura", "Thickness");
     public static string MoreColors => T("Mais cores…", "More colors…");
@@ -99,15 +100,15 @@ internal static class Strings
         "Language options › under \"Optical character recognition\", click Download.\n\n" +
         "Recognition runs on your computer; nothing is sent to the internet.");
 
-    // Desfoque automático.
-    public static string AutoBlurNone => T("Nenhum dado sensível encontrado", "No sensitive data found");
-    public static string AutoBlurOne => T("1 item desfocado", "1 item blurred");
-    public static string AutoBlurMany => T("{0} itens desfocados", "{0} items blurred");
-    public static string AutoBlurOnCapture => T("Desfocar dados sensíveis automaticamente ao capturar",
-                                                "Automatically blur sensitive data when capturing");
+    // Ocultar dados sensíveis (tarja automática).
+    public static string AutoRedactNone => T("Nenhum dado sensível encontrado", "No sensitive data found");
+    public static string AutoRedactOne => T("1 item ocultado com tarja", "1 item redacted");
+    public static string AutoRedactMany => T("{0} itens ocultados com tarja", "{0} items redacted");
+    public static string AutoRedactOnCapture => T("Ocultar dados sensíveis automaticamente ao capturar",
+                                                  "Automatically hide sensitive data when capturing");
 
-    public static string ItemsBlurred(int count) =>
-        count == 1 ? AutoBlurOne : string.Format(AutoBlurMany, count);
+    public static string ItemsRedacted(int count) =>
+        count == 1 ? AutoRedactOne : string.Format(AutoRedactMany, count);
 
     public static string LinesCopied(int count) =>
         count == 1 ? OcrOneLineCopied : string.Format(OcrLinesCopied, count);

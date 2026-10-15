@@ -660,10 +660,13 @@ public sealed record StrokeStyle(Color Color, int Thickness);
 - [x] OCR real reconhece texto pt-BR nesta máquina.
 - [ ] Botão e tecla O copiam o texto de uma captura real.
 
-## Phase 9: Desfoque automático
+## Phase 9: Ocultar dados sensíveis (tarja automática)
 - `Ocr/SensitiveDataDetector.cs` (pura): CPF e CNPJ com dígitos verificadores, e-mail, IPv4, telefone BR. Testes: `SensitiveDataDetectorTests`.
 - `Editor/AnnotationGroup`: lote numa única etapa de desfazer. Botão "Desfoque automático" (X); não repete áreas já desfocadas.
-- Configuração `AutoBlurOnCapture` (desligada por padrão).
+- Configuração `AutoRedactOnCapture` (desligada por padrão).
+- Revisão de segurança: o desfoque é pixelização e pode ser revertido em texto curto de formato conhecido. O botão X
+  virou "Ocultar dados sensíveis" e usa `RedactAnnotation` (tarja preta sólida, nova ferramenta `H`); o desfoque `B`
+  continua como efeito visual e o README não promete mais proteção com ele. Testes: `RedactAnnotationTests`.
 - `Ctrl+Shift+S` passa a ficar sempre registrado junto com a Print Screen (`HotkeyAction.CaptureAreaAlt`): o Windows pode aceitar o registro da Print Screen e mesmo assim não entregar a tecla.
 
 ### Verification

@@ -32,7 +32,7 @@ internal sealed class SettingsForm : Form
     private readonly CheckBox _askWhere = new() { AutoSize = true };
     private readonly CheckBox _startWithWindows = new() { AutoSize = true };
     private readonly CheckBox _showMagnifier = new() { AutoSize = true };
-    private readonly CheckBox _autoBlur = new() { AutoSize = true };
+    private readonly CheckBox _autoRedact = new() { AutoSize = true };
     private readonly ComboBox _themeBox = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 160 };
     private readonly ComboBox _language = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 160 };
     private Button? _okButton;
@@ -144,8 +144,8 @@ internal sealed class SettingsForm : Form
         AddWide(grid, _startWithWindows);
         _showMagnifier.Text = Strings.ShowMagnifier;
         AddWide(grid, _showMagnifier);
-        _autoBlur.Text = Strings.AutoBlurOnCapture;
-        AddWide(grid, _autoBlur);
+        _autoRedact.Text = Strings.AutoRedactOnCapture;
+        AddWide(grid, _autoRedact);
 
         _themeBox.Items.AddRange([Strings.ThemeDark, Strings.ThemeLight, Strings.FollowWindows]);
         AddRow(grid, Strings.LabelTheme, _themeBox);
@@ -197,7 +197,7 @@ internal sealed class SettingsForm : Form
         _askWhere.Checked = s.AskWhereToSave;
         _startWithWindows.Checked = startWithWindows;
         _showMagnifier.Checked = s.ShowMagnifier;
-        _autoBlur.Checked = s.AutoBlurOnCapture;
+        _autoRedact.Checked = s.AutoRedactOnCapture;
         _themeBox.SelectedIndex = Array.IndexOf(ThemeOrder, s.Theme);
         _language.SelectedIndex = Array.IndexOf(LanguageOrder, s.Language);
         UpdateSaveFields();
@@ -219,7 +219,7 @@ internal sealed class SettingsForm : Form
         s.AskWhereToSave = _askWhere.Checked;
         s.StartWithWindows = _startWithWindows.Checked;
         s.ShowMagnifier = _showMagnifier.Checked;
-        s.AutoBlurOnCapture = _autoBlur.Checked;
+        s.AutoRedactOnCapture = _autoRedact.Checked;
         s.Theme = ThemeOrder[Math.Max(0, _themeBox.SelectedIndex)];
         s.Language = LanguageOrder[Math.Max(0, _language.SelectedIndex)];
     }

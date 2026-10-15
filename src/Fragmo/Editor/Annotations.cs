@@ -355,3 +355,26 @@ public sealed class AnnotationGroup(IReadOnlyList<IAnnotation> items) : IAnnotat
         }
     }
 }
+
+/// <summary>
+/// Tarja: retângulo sólido e opaco gravado na imagem. Diferente do desfoque (pixelização), não guarda
+/// nada do conteúdo original, então é a forma segura de esconder senhas, documentos e dados pessoais.
+/// </summary>
+public sealed class RedactAnnotation(Rectangle r) : IAnnotation
+{
+    public static readonly Color Fill = Color.Black;
+
+    public Rectangle Rect { get; } = r;
+
+    public Rectangle Bounds => Rect;
+
+    public void Draw(Graphics g, Bitmap source)
+    {
+        GraphicsState state = g.Save();
+        g.SmoothingMode = SmoothingMode.None;
+        g.CompositingMode = CompositingMode.SourceCopy;
+        using var brush = new SolidBrush(Fill);
+        g.FillRectangle(brush, Rect);
+        g.Restore(state);
+    }
+}

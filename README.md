@@ -52,11 +52,10 @@ a cor sob o cursor, e o tamanho da seleção aparece enquanto você arrasta.
 
 **2. Anote.** Ao soltar o mouse, aparece **uma barra só**, centralizada abaixo da seleção, com o tamanho da área no
 começo e as ferramentas em grupos. Destaque com retângulo, seta e marcador, escreva um texto, numere os passos e
-**desfoque** dados sensíveis, à mão ou com o [desfoque automático](#desfoque-automático). O desfoque é gravado na
-imagem: não dá para desfazer depois de salvar.
+esconda dados sensíveis com a **tarja opaca**, à mão ou com [ocultar dados sensíveis](#ocultar-dados-sensíveis).
 
 <!-- PRINT NOVO: editor.png — seleção com anotações e a barra única embaixo (tamanho, ferramentas, cor, desfazer, ações). -->
-<p align="center"><img src="docs/images/editor.png" alt="Editor com a barra única: seta, retângulo, texto, marcador, passos e desfoque" width="85%"></p>
+<p align="center"><img src="docs/images/editor.png" alt="Editor com a barra única: seta, retângulo, texto, marcador, passos e tarja" width="85%"></p>
 
 **3. Use.** Copie a imagem (`Ctrl+C` ou `Enter`) e cole onde quiser, **copie o texto** que está na imagem (`O`), salve
 em PNG/JPEG/BMP (`Ctrl+S`), imprima (`Ctrl+P`) ou **fixe na tela** (`Ctrl+T`) para usar como referência por cima das
@@ -71,8 +70,9 @@ outras janelas.
 | Marcador | `M` | | Imprimir | `Ctrl+P` |
 | Texto | `T` | | Desfazer / refazer | `Ctrl+Z` / `Ctrl+Y` |
 | Passos numerados | `N` | | Fechar | `Esc` |
-| Desfoque | `B` | | | |
-| Desfoque automático | `X` | | | |
+| Desfoque (efeito visual) | `B` | | | |
+| Tarja opaca | `H` | | | |
+| Ocultar dados sensíveis | `X` | | | |
 
 ### Copiar texto da imagem
 
@@ -85,24 +85,31 @@ região › "…" ao lado do idioma › Opções de idioma › Reconhecimento ó
 
 <!-- PRINT NOVO: copiar-texto.png — seleção sobre um texto e o aviso "N linhas copiadas" na bandeja. -->
 
-### Desfoque automático
+### Ocultar dados sensíveis
 
-O botão **Desfoque automático** (`X`) procura dados sensíveis na seleção e desfoca cada um deles:
+A **tarja opaca** (`H`) cobre a área com um retângulo preto sólido, gravado na imagem exportada. Ela não guarda nada do
+que estava embaixo, por isso é a forma certa de esconder senhas, documentos e dados pessoais.
 
-- **CPF** e **CNPJ**, conferindo os dígitos verificadores (um número com dígito errado não é desfocado);
+O botão **Ocultar dados sensíveis** (`X`) procura esses dados na seleção e põe uma tarja em cada um:
+
+- **CPF** e **CNPJ**, conferindo os dígitos verificadores (um número com dígito errado não é coberto);
 - **e-mail**;
 - **endereço IP** (IPv4);
 - **telefone** brasileiro, com ou sem DDD, com ou sem formatação.
 
-A bandeja avisa quantos itens foram desfocados, ou "Nenhum dado sensível encontrado". O lote inteiro entra como **uma
-etapa**: um `Ctrl+Z` desfaz tudo. Também dá para ligar **"Desfocar dados sensíveis automaticamente ao capturar"** em
-Configurações, e aí o desfoque acontece sozinho ao selecionar a área.
+A bandeja avisa quantos itens foram ocultados, ou "Nenhum dado sensível encontrado". O lote inteiro entra como **uma
+etapa**: um `Ctrl+Z` desfaz tudo. Também dá para ligar **"Ocultar dados sensíveis automaticamente ao capturar"** em
+Configurações, e aí as tarjas aparecem sozinhas ao selecionar a área.
 
 **Tudo roda no seu PC.** O texto é lido pelo OCR do Windows e analisado pelo próprio Fragmo; nenhuma imagem ou texto
-sai do computador. Como o reconhecimento pode errar com letras muito pequenas ou fundos complicados, confira a imagem
-antes de compartilhar.
+sai do computador. O reconhecimento pode deixar passar letras muito pequenas ou fundos complicados, então confira a
+imagem antes de compartilhar e complete com a tarja à mão se precisar.
 
-<!-- PRINT NOVO: desfoque-automatico.png — antes e depois: CPF, e-mail e telefone desfocados e o aviso na bandeja. -->
+> **O desfoque (`B`) não protege dados.** Ele é uma pixelização, um efeito visual: com texto curto e de formato
+> conhecido (CPF, telefone, e-mail), dá para reconstruir o conteúdo comparando com versões pixelizadas de candidatos.
+> Para qualquer coisa que não pode vazar, use a tarja.
+
+<!-- PRINT NOVO: ocultar-dados.png — antes e depois: CPF, e-mail e telefone cobertos com tarja e o aviso na bandeja. -->
 
 ### Atalhos globais
 
@@ -116,10 +123,10 @@ antes de compartilhar.
 ### Configurações
 
 Clique com o botão direito no ícone da bandeja › **Configurações…**. Os atalhos mudam na hora (clique na caixa e
-pressione a combinação), e você escolhe a pasta, o formato, o prefixo do nome, o tema, o idioma e se o desfoque
-automático roda sozinho ao capturar.
+pressione a combinação), e você escolhe a pasta, o formato, o prefixo do nome, o tema, o idioma e se os dados
+sensíveis são ocultados sozinhos ao capturar.
 
-<!-- PRINT NOVO: configuracoes.png — tela de configurações com a opção "Desfocar dados sensíveis automaticamente ao capturar". -->
+<!-- PRINT NOVO: configuracoes.png — tela de configurações com a opção "Ocultar dados sensíveis automaticamente ao capturar". -->
 <p align="center"><img src="docs/images/configuracoes.png" alt="Tela de configurações" width="420"></p>
 
 **A tecla Print Screen abre a ferramenta do Windows?** No Windows 11 ela vem reservada para a captura do próprio
@@ -188,10 +195,10 @@ and the color under the cursor, and the selection size is shown while you drag.
 
 **2. Annotate.** When you release the mouse, **a single toolbar** appears, centered below the selection, with the area
 size first and the tools in groups. Highlight with rectangles, arrows and the highlighter, add text, number the steps
-and **blur** sensitive data, by hand or with [auto-blur](#auto-blur). The blur is baked into the image.
+and hide sensitive data with the **redaction bar**, by hand or with [hide sensitive data](#hide-sensitive-data).
 
 <!-- NEW SCREENSHOT: editor.png — selection with annotations and the single toolbar below it. -->
-<p align="center"><img src="docs/images/editor.png" alt="Editor with the single toolbar: arrow, rectangle, text, highlighter, steps and blur" width="85%"></p>
+<p align="center"><img src="docs/images/editor.png" alt="Editor with the single toolbar: arrow, rectangle, text, highlighter, steps and redaction" width="85%"></p>
 
 **3. Use it.** Copy the image (`Ctrl+C` or `Enter`) and paste anywhere, **copy the text** in the image (`O`), save as
 PNG/JPEG/BMP (`Ctrl+S`), print (`Ctrl+P`) or **pin it to the screen** (`Ctrl+T`) as an always-on-top reference.
@@ -205,8 +212,9 @@ PNG/JPEG/BMP (`Ctrl+S`), print (`Ctrl+P`) or **pin it to the screen** (`Ctrl+T`)
 | Highlighter | `M` | | Print | `Ctrl+P` |
 | Text | `T` | | Undo / redo | `Ctrl+Z` / `Ctrl+Y` |
 | Numbered steps | `N` | | Close | `Esc` |
-| Blur | `B` | | | |
-| Auto-blur | `X` | | | |
+| Blur (visual effect) | `B` | | | |
+| Redact | `H` | | | |
+| Hide sensitive data | `X` | | | |
 
 ### Copy text from the image
 
@@ -219,23 +227,31 @@ next to the language › Language options › Optical character recognition › 
 
 <!-- NEW SCREENSHOT: copiar-texto.png — selection over some text and the "N lines copied" tray notice. -->
 
-### Auto-blur
+### Hide sensitive data
 
-**Auto-blur** (`X`) looks for sensitive data in the selection and blurs each item:
+**Redact** (`H`) covers an area with a solid black box, baked into the exported image. It keeps nothing of what was
+underneath, so it is the right way to hide passwords, documents and personal data.
+
+**Hide sensitive data** (`X`) looks for that kind of data in the selection and redacts each item:
 
 - Brazilian **CPF** and **CNPJ** numbers, checking the verification digits (a number with a wrong digit is left alone);
 - **email** addresses;
 - **IP addresses** (IPv4);
 - Brazilian **phone numbers**, with or without area code and formatting.
 
-The tray tells you how many items were blurred, or "No sensitive data found". The whole batch is **one step**: a single
-`Ctrl+Z` undoes it. You can also turn on **"Automatically blur sensitive data when capturing"** in Settings to have it
-run as soon as you select an area.
+The tray tells you how many items were redacted, or "No sensitive data found". The whole batch is **one step**: a
+single `Ctrl+Z` undoes it. You can also turn on **"Automatically hide sensitive data when capturing"** in Settings to
+have it run as soon as you select an area.
 
 **Everything runs on your PC.** Text is read by the Windows OCR and analyzed by Fragmo itself; no image or text ever
-leaves your computer. Recognition can miss very small text or busy backgrounds, so check the image before sharing it.
+leaves your computer. Recognition can miss very small text or busy backgrounds, so check the image before sharing it
+and add redactions by hand if needed.
 
-<!-- NEW SCREENSHOT: desfoque-automatico.png — before and after: CPF, email and phone blurred, plus the tray notice. -->
+> **Blur (`B`) does not protect data.** It is pixelation, a visual effect: short text in a known format (CPF, phone,
+> email) can be reconstructed by comparing it with pixelated versions of candidates. For anything that must not leak,
+> use redaction.
+
+<!-- NEW SCREENSHOT: ocultar-dados.png — before and after: CPF, email and phone redacted, plus the tray notice. -->
 
 ### Global hotkeys
 
@@ -249,7 +265,7 @@ leaves your computer. Recognition can miss very small text or busy backgrounds, 
 ### Settings
 
 Right-click the tray icon › **Settings…**. Hotkeys change immediately (click a box and press the combination), and you
-can pick the folder, format, file name prefix, theme, language and whether auto-blur runs on every capture.
+can pick the folder, format, file name prefix, theme, language and whether sensitive data is hidden on every capture.
 
 **Print Screen opens the Windows tool instead?** On Windows 11 the key is reserved for the system's own screen capture;
 `Ctrl+Shift+S` always works, so you are never left without a hotkey. To free Print Screen too: **Windows Settings › Accessibility ›
