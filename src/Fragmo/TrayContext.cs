@@ -25,6 +25,7 @@ internal sealed class TrayContext : ApplicationContext
     private readonly CaptureWorkflow _workflow;
     private readonly List<PinWindow> _pins = [];
     private SettingsForm? _settingsForm;
+    private readonly CloseRequestListener _closeRequests;
     private bool _areaUsesFallback;
 
     /// <param name="quiet">Modo <c>--tray</c> (iniciar com o Windows): não mostra avisos na abertura.</param>
@@ -46,6 +47,7 @@ internal sealed class TrayContext : ApplicationContext
         _notifyIcon.DoubleClick += (_, _) => _workflow.CaptureArea();
         _hotkeys = new HotkeyManager();
         _hotkeys.Pressed += OnHotkeyPressed;
+        _closeRequests = new CloseRequestListener(OnCloseRequested);
         IReadOnlyList<HotkeyAction> failed = RegisterAllHotkeys();
         if (!quiet)
         {
@@ -261,8 +263,22 @@ internal sealed class TrayContext : ApplicationContext
     private static void ShowAbout() =>
         MessageBox.Show(Strings.AboutText, Strings.AppName, MessageBoxButtons.OK, MessageBoxIcon.Information);
 
+    /// <summary>
+    /// Pedido do instalador. Fecha normalmente, a não ser que algo possa se perder: captura em edição,
+    /// imagem fixada ou configurações abertas. Nesse caso continua aberto e o instalador avisa o usuário.
+    /// </summary>
+    private void OnCloseRequested()
+    {
+        if (_workflow.IsBusy || _pins.Count > 0 || _settingsForm is not null)
+        {
+            return;
+        }
+        ExitThread();
+    }
+
     protected override void ExitThreadCore()
     {
+        _closeRequests.Dispose();
         CloseAllPins();
         _settingsForm?.Close();
         _hotkeys.Dispose();

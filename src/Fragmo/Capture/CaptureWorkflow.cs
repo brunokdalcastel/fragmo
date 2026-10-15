@@ -11,6 +11,9 @@ internal sealed class CaptureWorkflow(AppSettings settings, SettingsStore store,
 {
     private bool _busy;
 
+    /// <summary>Há uma captura em andamento (editor, diálogo de salvar ou impressão abertos).</summary>
+    public bool IsBusy => _busy;
+
     public void CaptureArea() => Run(() =>
     {
         // Captura antes de mostrar o overlay, para a tela ficar "congelada".

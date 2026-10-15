@@ -667,6 +667,9 @@ public sealed record StrokeStyle(Color Color, int Thickness);
 - Revisão de segurança: o desfoque é pixelização e pode ser revertido em texto curto de formato conhecido. O botão X
   virou "Ocultar dados sensíveis" e usa `RedactAnnotation` (tarja preta sólida, nova ferramenta `H`); o desfoque `B`
   continua como efeito visual e o README não promete mais proteção com ele. Testes: `RedactAnnotationTests`.
+- Instalador sem `taskkill /F` direto: `CloseRequestListener` (evento `Local\Fragmo.CloseRequest`) fecha o app
+  normalmente, a menos que haja captura em edição, imagem fixada ou configurações abertas; aí o instalador avisa e o
+  usuário escolhe tentar de novo, fechar à força ou cancelar. Em modo silencioso nunca força.
 - `Ctrl+Shift+S` passa a ficar sempre registrado junto com a Print Screen (`HotkeyAction.CaptureAreaAlt`): o Windows pode aceitar o registro da Print Screen e mesmo assim não entregar a tecla.
 
 ### Verification

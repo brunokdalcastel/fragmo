@@ -137,9 +137,14 @@ do Windows e entre de novo: algumas versões só aplicam essa opção no próxim
 
 ### Atualizar e desinstalar
 
-- **Atualizar:** baixe e rode o instalador mais novo; ele fecha o Fragmo, troca a versão e mantém suas configurações.
+- **Atualizar:** baixe e rode o instalador mais novo; ele troca a versão e mantém suas configurações.
 - **Desinstalar:** **Configurações do Windows › Apps › Apps instalados › Fragmo › Desinstalar**. As configurações
   ficam em `%APPDATA%\Fragmo`, caso queira apagá-las também.
+
+Para atualizar ou desinstalar, o instalador **pede** para o Fragmo fechar, sem encerrá-lo à força. Se houver uma captura
+em edição, uma imagem fixada na tela ou as configurações abertas, o Fragmo continua aberto e o instalador avisa: você
+termina o que estava fazendo e clica em **Tentar de novo**. Fechar à força só acontece se você escolher, depois do
+aviso, sabendo que o que não foi salvo se perde. Em instalação silenciosa (`/VERYSILENT`) ele nunca força: cancela.
 
 ### Privacidade
 
@@ -275,9 +280,14 @@ next sign-in.
 
 ### Update and uninstall
 
-- **Update:** download and run the newest installer; it closes Fragmo, replaces it and keeps your settings.
+- **Update:** download and run the newest installer; it replaces the app and keeps your settings.
 - **Uninstall:** **Windows Settings › Apps › Installed apps › Fragmo › Uninstall**. Settings live in
   `%APPDATA%\Fragmo` if you want to delete them too.
+
+To update or uninstall, the installer **asks** Fragmo to close instead of killing it. If a capture is being edited, an
+image is pinned to the screen or the settings window is open, Fragmo stays open and the installer tells you: finish what
+you were doing and click **Try again**. It only forces Fragmo to close if you choose to, after the warning, knowing that
+anything unsaved is lost. In silent installs (`/VERYSILENT`) it never forces: it cancels.
 
 ### Privacy
 

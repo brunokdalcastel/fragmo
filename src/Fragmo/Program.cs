@@ -7,6 +7,9 @@ internal static class Program
 {
     private static readonly int[] IconSizes = [16, 24, 32, 48, 256];
 
+    /// <summary>Instância única; o instalador também olha este nome para saber se o Fragmo está aberto.</summary>
+    public const string InstanceMutexName = @"Local\Fragmo.SingleInstance";
+
     [STAThread]
     private static int Main(string[] args)
     {
@@ -30,7 +33,7 @@ internal static class Program
         // O mutex é verificado antes de carregar as configurações, então a mensagem usa o idioma do Windows.
         Strings.Apply(UiLanguage.System);
 
-        using var mutex = new Mutex(true, @"Local\Fragmo.SingleInstance", out bool created);
+        using var mutex = new Mutex(true, InstanceMutexName, out bool created);
         if (!created)
         {
             if (!quiet)
