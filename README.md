@@ -1,4 +1,3 @@
-<!-- PRINT NOVO: banner.png — o banner mostra o editor com as barras antigas; refazer com a barra única. -->
 <p align="center">
   <img src="docs/images/banner.png" alt="Fragmo — captura de tela para Windows" width="100%">
 </p>
@@ -47,14 +46,12 @@ numa pasta qualquer e abra. Para iniciar com o Windows, ligue a opção em **Con
 **1. Selecione.** Aperte Print Screen: a tela congela e você arrasta para escolher a área. A lupa mostra cada pixel e
 a cor sob o cursor, e o tamanho da seleção aparece enquanto você arrasta.
 
-<!-- PRINT NOVO: selecao.png — arrastando a seleção, com a lupa e o tamanho no canto. -->
 <p align="center"><img src="docs/images/selecao.png" alt="Selecionando uma área com a lupa" width="85%"></p>
 
 **2. Anote.** Ao soltar o mouse, aparece **uma barra só**, centralizada abaixo da seleção, com o tamanho da área no
 começo e as ferramentas em grupos. Destaque com retângulo, seta e marcador, escreva um texto, numere os passos e
 esconda dados sensíveis com a **tarja opaca**, à mão ou com [ocultar dados sensíveis](#ocultar-dados-sensíveis).
 
-<!-- PRINT NOVO: editor.png — seleção com anotações e a barra única embaixo (tamanho, ferramentas, cor, desfazer, ações). -->
 <p align="center"><img src="docs/images/editor.png" alt="Editor com a barra única: seta, retângulo, texto, marcador, passos e tarja" width="85%"></p>
 
 **3. Use.** Copie a imagem (`Ctrl+C` ou `Enter`) e cole onde quiser, **copie o texto** que está na imagem (`O`), salve
@@ -83,7 +80,7 @@ do próprio Windows, no idioma do seu perfil, e roda no computador: nada é envi
 Se aparecer o aviso de que falta o idioma, instale o pacote em **Configurações do Windows › Hora e idioma › Idioma e
 região › "…" ao lado do idioma › Opções de idioma › Reconhecimento óptico de caracteres › Baixar**.
 
-<!-- PRINT NOVO: copiar-texto.png — seleção sobre um texto e o aviso "N linhas copiadas" na bandeja. -->
+<p align="center"><img src="docs/images/copiar-texto.png" alt="Copiar texto: a seleção sobre uma mensagem de erro e o texto que foi para a área de transferência" width="95%"></p>
 
 ### Ocultar dados sensíveis
 
@@ -109,7 +106,7 @@ imagem antes de compartilhar e complete com a tarja à mão se precisar.
 > conhecido (CPF, telefone, e-mail), dá para reconstruir o conteúdo comparando com versões pixelizadas de candidatos.
 > Para qualquer coisa que não pode vazar, use a tarja.
 
-<!-- PRINT NOVO: ocultar-dados.png — antes e depois: CPF, e-mail e telefone cobertos com tarja e o aviso na bandeja. -->
+<p align="center"><img src="docs/images/ocultar-dados.png" alt="Antes e depois: CPF, e-mail e celular cobertos com tarja preta" width="95%"></p>
 
 ### Atalhos globais
 
@@ -126,7 +123,6 @@ Clique com o botão direito no ícone da bandeja › **Configurações…**. Os 
 pressione a combinação), e você escolhe a pasta, o formato, o prefixo do nome, o tema, o idioma e se os dados
 sensíveis são ocultados sozinhos ao capturar.
 
-<!-- PRINT NOVO: configuracoes.png — tela de configurações com a opção "Ocultar dados sensíveis automaticamente ao capturar". -->
 <p align="center"><img src="docs/images/configuracoes.png" alt="Tela de configurações" width="420"></p>
 
 **A tecla Print Screen abre a ferramenta do Windows?** No Windows 11 ela vem reservada para a captura do próprio
@@ -195,14 +191,12 @@ in any folder and run it. To start it with Windows, turn the option on in **Sett
 **1. Select.** Press Print Screen: the screen freezes and you drag to pick the area. The magnifier shows every pixel
 and the color under the cursor, and the selection size is shown while you drag.
 
-<!-- NEW SCREENSHOT: selecao.png — dragging the selection, with the magnifier and the size in the corner. -->
 <p align="center"><img src="docs/images/selecao.png" alt="Selecting an area with the magnifier" width="85%"></p>
 
 **2. Annotate.** When you release the mouse, **a single toolbar** appears, centered below the selection, with the area
 size first and the tools in groups. Highlight with rectangles, arrows and the highlighter, add text, number the steps
 and hide sensitive data with the **redaction bar**, by hand or with [hide sensitive data](#hide-sensitive-data).
 
-<!-- NEW SCREENSHOT: editor.png — selection with annotations and the single toolbar below it. -->
 <p align="center"><img src="docs/images/editor.png" alt="Editor with the single toolbar: arrow, rectangle, text, highlighter, steps and redaction" width="85%"></p>
 
 **3. Use it.** Copy the image (`Ctrl+C` or `Enter`) and paste anywhere, **copy the text** in the image (`O`), save as
@@ -230,7 +224,7 @@ language, and runs on your computer: nothing is sent to the internet.
 If you are told a language is missing, install it in **Windows Settings › Time & language › Language & region › "…"
 next to the language › Language options › Optical character recognition › Download**.
 
-<!-- NEW SCREENSHOT: copiar-texto.png — selection over some text and the "N lines copied" tray notice. -->
+<p align="center"><img src="docs/images/copiar-texto.png" alt="Copy text: a selection over an error message and the text placed on the clipboard" width="95%"></p>
 
 ### Hide sensitive data
 
@@ -256,7 +250,7 @@ and add redactions by hand if needed.
 > email) can be reconstructed by comparing it with pixelated versions of candidates. For anything that must not leak,
 > use redaction.
 
-<!-- NEW SCREENSHOT: ocultar-dados.png — before and after: CPF, email and phone redacted, plus the tray notice. -->
+<p align="center"><img src="docs/images/ocultar-dados.png" alt="Before and after: CPF, email and phone covered with black redaction bars" width="95%"></p>
 
 ### Global hotkeys
 
