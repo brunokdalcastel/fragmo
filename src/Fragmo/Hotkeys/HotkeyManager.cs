@@ -2,7 +2,8 @@ using Fragmo.Native;
 
 namespace Fragmo.Hotkeys;
 
-internal enum HotkeyAction { CaptureArea, CaptureFullScreen, CaptureWindow, RepeatLastArea }
+// CaptureAreaAlt: o atalho alternativo da área (Ctrl+Shift+S), registrado junto com o principal.
+internal enum HotkeyAction { CaptureArea, CaptureFullScreen, CaptureWindow, RepeatLastArea, CaptureAreaAlt }
 
 /// <summary>
 /// Registra atalhos globais numa janela só de mensagens e avisa quando são pressionados.

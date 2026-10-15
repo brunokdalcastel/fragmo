@@ -664,6 +664,7 @@ public sealed record StrokeStyle(Color Color, int Thickness);
 - `Ocr/SensitiveDataDetector.cs` (pura): CPF e CNPJ com dígitos verificadores, e-mail, IPv4, telefone BR. Testes: `SensitiveDataDetectorTests`.
 - `Editor/AnnotationGroup`: lote numa única etapa de desfazer. Botão "Desfoque automático" (X); não repete áreas já desfocadas.
 - Configuração `AutoBlurOnCapture` (desligada por padrão).
+- `Ctrl+Shift+S` passa a ficar sempre registrado junto com a Print Screen (`HotkeyAction.CaptureAreaAlt`): o Windows pode aceitar o registro da Print Screen e mesmo assim não entregar a tecla.
 
 ### Verification
 - [x] Ponta a ponta com OCR real: 4 itens desfocados, CPF inválido mantido, um Ctrl+Z desfaz o lote.

@@ -108,7 +108,7 @@ antes de compartilhar.
 
 | Ação | Atalho padrão |
 |---|---|
-| Capturar área | `Print Screen` (alternativo: `Ctrl+Shift+S`) |
+| Capturar área | `Print Screen` ou `Ctrl+Shift+S` (os dois sempre ativos) |
 | Tela cheia → salva direto na pasta | `Ctrl+Shift+F` |
 | Janela ativa → abre no editor | `Ctrl+Shift+W` |
 | Repetir a última área | `Ctrl+Shift+R` |
@@ -123,7 +123,7 @@ automático roda sozinho ao capturar.
 <p align="center"><img src="docs/images/configuracoes.png" alt="Tela de configurações" width="420"></p>
 
 **A tecla Print Screen abre a ferramenta do Windows?** No Windows 11 ela vem reservada para a captura do próprio
-sistema; nesse caso o Fragmo usa `Ctrl+Shift+S` e avisa na bandeja. Para liberar a tecla:
+sistema. O `Ctrl+Shift+S` funciona sempre, então você nunca fica sem atalho; para liberar também a Print Screen:
 **Configurações do Windows › Acessibilidade › Teclado** › desative *"Usar a tecla Print Screen para abrir a captura
 de tela"*. Depois feche o Fragmo (bandeja › Sair) e abra de novo. Se a tecla continuar sem abrir nada, saia da conta
 do Windows e entre de novo: algumas versões só aplicam essa opção no próximo login.
@@ -241,7 +241,7 @@ leaves your computer. Recognition can miss very small text or busy backgrounds, 
 
 | Action | Default hotkey |
 |---|---|
-| Capture area | `Print Screen` (fallback: `Ctrl+Shift+S`) |
+| Capture area | `Print Screen` or `Ctrl+Shift+S` (both always on) |
 | Full screen → saved straight to the folder | `Ctrl+Shift+F` |
 | Active window → opens in the editor | `Ctrl+Shift+W` |
 | Repeat last area | `Ctrl+Shift+R` |
@@ -252,7 +252,7 @@ Right-click the tray icon › **Settings…**. Hotkeys change immediately (click
 can pick the folder, format, file name prefix, theme, language and whether auto-blur runs on every capture.
 
 **Print Screen opens the Windows tool instead?** On Windows 11 the key is reserved for the system's own screen capture;
-in that case Fragmo uses `Ctrl+Shift+S` and shows a tray notice. To free the key: **Windows Settings › Accessibility ›
+`Ctrl+Shift+S` always works, so you are never left without a hotkey. To free Print Screen too: **Windows Settings › Accessibility ›
 Keyboard** › turn off *"Use the Print screen key to open screen capture"*. Then exit Fragmo (tray › Exit) and start
 it again. If the key still does nothing, sign out of Windows and back in: some versions only apply this option at the
 next sign-in.

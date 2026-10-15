@@ -60,8 +60,8 @@ internal sealed class TrayContext : ApplicationContext
         _notifyIcon.ShowBalloonTip(4000, Strings.AppName, text, ToolTipIcon.Error);
 
     /// <summary>
-    /// Libera e registra de novo todos os atalhos. Devolve as ações cujo atalho o Windows recusou; se o de área
-    /// falhar, tenta o alternativo (<see cref="HotkeySettings.CaptureAreaFallback"/>) por último.
+    /// Libera e registra de novo todos os atalhos. Devolve as ações cujo atalho o Windows recusou. O alternativo
+    /// da área (<see cref="HotkeySettings.CaptureAreaFallback"/>) é registrado sempre, por último.
     /// </summary>
     private IReadOnlyList<HotkeyAction> RegisterAllHotkeys()
     {
@@ -77,11 +77,25 @@ internal sealed class TrayContext : ApplicationContext
             }
         }
 
-        if (failed.Contains(HotkeyAction.CaptureArea))
-        {
-            _areaUsesFallback = TryRegister(HotkeyAction.CaptureArea, _settings.Hotkeys.CaptureAreaFallback);
-        }
+        // O alternativo fica sempre ativo, não só quando a Print Screen é recusada: há casos em que o
+        // Windows aceita o registro da Print Screen mas continua com a tecla para ele.
+        bool fallbackOk = RegisterAreaFallback();
+        _areaUsesFallback = fallbackOk && failed.Contains(HotkeyAction.CaptureArea);
         return failed;
+    }
+
+    private bool RegisterAreaFallback()
+    {
+        if (!HotkeyBinding.TryParse(_settings.Hotkeys.CaptureAreaFallback, out HotkeyBinding alt))
+        {
+            return false;
+        }
+        // Se o principal já for o próprio alternativo, não há o que registrar de novo.
+        if (HotkeyBinding.TryParse(_settings.Hotkeys.CaptureArea, out HotkeyBinding main) && main == alt)
+        {
+            return true;
+        }
+        return _hotkeys.TryRegister(HotkeyAction.CaptureAreaAlt, alt);
     }
 
     /// <summary>Avisa por balão os atalhos que falharam na abertura do app.</summary>
@@ -134,6 +148,7 @@ internal sealed class TrayContext : ApplicationContext
         switch (action)
         {
             case HotkeyAction.CaptureArea:
+            case HotkeyAction.CaptureAreaAlt:
                 _workflow.CaptureArea();
                 break;
             case HotkeyAction.CaptureFullScreen:
