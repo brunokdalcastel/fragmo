@@ -44,7 +44,14 @@ internal sealed class TrayContext : ApplicationContext
         };
 
         _workflow = new CaptureWorkflow(settings, store, new OutputService(settings), this);
-        _notifyIcon.DoubleClick += (_, _) => _workflow.CaptureArea();
+        // Um clique com o botão esquerdo já captura; o direito continua abrindo o menu.
+        _notifyIcon.MouseClick += (_, e) =>
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                _workflow.CaptureArea();
+            }
+        };
         _hotkeys = new HotkeyManager();
         _hotkeys.Pressed += OnHotkeyPressed;
         _closeRequests = new CloseRequestListener(OnCloseRequested);
