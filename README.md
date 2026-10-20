@@ -26,7 +26,7 @@ nuvem, sem telemetria.
 
 1. **[Baixe o instalador](https://github.com/brunokdalcastel/fragmo/releases/latest/download/Fragmo-Setup.exe)** (`Fragmo-Setup.exe`).
 2. Abra o arquivo baixado, escolha as opções (já vêm marcadas) e clique em **Instalar** e depois **Concluir**.
-3. Pronto: o ícone do Fragmo aparece na bandeja, perto do relógio. Aperte **Print Screen** para capturar.
+3. Pronto: o ícone do Fragmo aparece na bandeja, perto do relógio. Aperte **Print Screen** (ou clique uma vez no ícone) para capturar.
 
 Não precisa de administrador nem do .NET. Por padrão o Fragmo já inicia junto com o Windows.
 
@@ -170,7 +170,7 @@ no cloud, no telemetry. The interface is available in English and Portuguese.
 
 1. **[Download the installer](https://github.com/brunokdalcastel/fragmo/releases/latest/download/Fragmo-Setup.exe)** (`Fragmo-Setup.exe`).
 2. Open the downloaded file, review the options (already checked) and click **Install**, then **Finish**.
-3. Done: the Fragmo icon shows up in the tray, next to the clock. Press **Print Screen** to capture.
+3. Done: the Fragmo icon shows up in the tray, next to the clock. Press **Print Screen** (or click the icon once) to capture.
 
 No admin rights and no .NET needed. By default Fragmo starts with Windows.
 
