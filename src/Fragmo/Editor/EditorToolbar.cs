@@ -33,7 +33,7 @@ internal sealed class EditorToolbar : Control
     private enum ButtonId
     {
         Pen, Line, Arrow, Rectangle, Marker, Text, Step, Blur, Redact, AutoRedact, Color, Thickness,
-        Undo, Redo, Pin, Print, Copy, CopyText, Save, Close,
+        Undo, Redo, Pin, Print, Copy, CopyText, Save, Done, Close,
     }
 
     // null = separador entre grupos.
@@ -46,9 +46,20 @@ internal sealed class EditorToolbar : Control
         ButtonId.Pin, ButtonId.Print, ButtonId.Copy, ButtonId.CopyText, ButtonId.Save, ButtonId.Close,
     ];
 
+    // Modo tutorial (editar a imagem de um passo): sem as saídas da captura, com "Concluir".
+    private static readonly ButtonId?[] TutorialButtonOrder =
+    [
+        ButtonId.Pen, ButtonId.Line, ButtonId.Arrow, ButtonId.Rectangle, ButtonId.Marker, ButtonId.Text,
+        ButtonId.Step, ButtonId.Blur, ButtonId.Redact, ButtonId.AutoRedact, null,
+        ButtonId.Color, ButtonId.Thickness, null,
+        ButtonId.Undo, ButtonId.Redo, null,
+        ButtonId.Done, ButtonId.Close,
+    ];
+
     private sealed record Item(ButtonId Id, Rectangle Bounds);
 
     private readonly Theme _theme;
+    private readonly ButtonId?[] _order;
     private readonly Font _labelFont = new("Segoe UI", 9f);
     private readonly List<Item> _items = [];
     private readonly List<Rectangle> _separators = [];
@@ -67,10 +78,12 @@ internal sealed class EditorToolbar : Control
     private string _sizeText = string.Empty;
     private Rectangle _labelBounds;
 
-    public EditorToolbar(Theme theme, StrokeStyle style)
+    /// <param name="tutorialMode">Esconde copiar, salvar, fixar, imprimir e copiar texto; mostra "Concluir".</param>
+    public EditorToolbar(Theme theme, StrokeStyle style, bool tutorialMode = false)
     {
         _theme = theme;
         _style = style;
+        _order = tutorialMode ? TutorialButtonOrder : ButtonOrder;
 
         // Fundo transparente: o WinForms pinta o overlay por trás, e os cantos arredondados ficam suaves.
         SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer |
@@ -96,6 +109,7 @@ internal sealed class EditorToolbar : Control
     public event Action? CopyTextClicked;
     public event Action? AutoRedactClicked;
     public event Action? SaveClicked;
+    public event Action? DoneClicked;
     public event Action? CloseClicked;
 
     public void SetUndoRedo(bool canUndo, bool canRedo)
@@ -139,7 +153,7 @@ internal sealed class EditorToolbar : Control
         _separators.Add(new Rectangle(x, BarPadding, SeparatorSize, ButtonSize));
         x += SeparatorSize;
 
-        foreach (ButtonId? id in ButtonOrder)
+        foreach (ButtonId? id in _order)
         {
             if (id is null)
             {
@@ -197,6 +211,7 @@ internal sealed class EditorToolbar : Control
         ButtonId.Copy => Strings.ActionCopy,
         ButtonId.CopyText => Strings.ActionCopyText,
         ButtonId.Save => Strings.ActionSave,
+        ButtonId.Done => Strings.ActionDone,
         _ => Strings.ActionClose,
     };
 
@@ -306,6 +321,9 @@ internal sealed class EditorToolbar : Control
                 break;
             case ButtonId.Save:
                 SaveClicked?.Invoke();
+                break;
+            case ButtonId.Done:
+                DoneClicked?.Invoke();
                 break;
             case ButtonId.Close:
                 CloseClicked?.Invoke();
@@ -645,6 +663,10 @@ internal sealed class EditorToolbar : Control
                 g.DrawLines(pen, new Point[] { new(l + 1, b - 5), new(l + 1, b - 1), new(rt - 1, b - 1), new(rt - 1, b - 5) });
                 break;
 
+            case ButtonId.Done:
+                g.DrawLines(pen, new Point[] { new(l + 1, t + r.Height / 2), new(l + 6, b - 3), new(rt - 1, t + 3) });
+                break;
+
             case ButtonId.Close:
                 g.DrawLine(pen, l + 2, t + 2, rt - 2, b - 2);
                 g.DrawLine(pen, rt - 2, t + 2, l + 2, b - 2);
@@ -669,8 +691,8 @@ internal sealed class EditorToolbar : Control
         base.Dispose(disposing);
     }
 
-    /// <summary>Cores dos menus de cor/espessura seguindo o tema.</summary>
-    private sealed class ThemedColorTable(Theme theme) : ProfessionalColorTable
+    /// <summary>Cores dos menus seguindo o tema (também usado pelo editor de tutorial).</summary>
+    internal sealed class ThemedColorTable(Theme theme) : ProfessionalColorTable
     {
         public override Color ToolStripDropDownBackground => theme.Background;
         public override Color ImageMarginGradientBegin => theme.Background;

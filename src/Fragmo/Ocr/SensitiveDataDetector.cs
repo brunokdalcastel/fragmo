@@ -61,25 +61,61 @@ public static partial class SensitiveDataDetector
         }
 
         string lineText = text.ToString();
-        var taken = new List<(int Start, int End)>();
+        foreach ((SensitiveKind kind, int start, int end) in FindInText(lineText, r => !BoundsOf(spans, r.Start, r.End).IsEmpty))
+        {
+            found.Add(new SensitiveMatch(kind, lineText[start..end], BoundsOf(spans, start, end)));
+        }
+    }
+
+    /// <summary>
+    /// Troca cada dado sensível do texto por "•••" (texto de passo e título de janela do modo tutorial).
+    /// Usa as mesmas regras do <see cref="Find"/>, direto sobre o texto.
+    /// </summary>
+    public static string MaskText(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return text;
+        }
+
+        var matches = FindInText(text, _ => true).OrderBy(m => m.Start).ToList();
+        if (matches.Count == 0)
+        {
+            return text;
+        }
+
+        var sb = new System.Text.StringBuilder(text.Length);
+        int pos = 0;
+        foreach ((_, int start, int end) in matches)
+        {
+            sb.Append(text, pos, start - pos).Append(Mask);
+            pos = end;
+        }
+        return sb.Append(text, pos, text.Length - pos).ToString();
+    }
+
+    private const string Mask = "•••";
+
+    /// <summary>
+    /// Os trechos [Start, End) do texto que casam com as regras. <paramref name="place"/> pode recusar um trecho
+    /// (ex.: sem retângulo na imagem); recusado, ele não reserva o espaço para as regras seguintes.
+    /// </summary>
+    private static List<(SensitiveKind Kind, int Start, int End)> FindInText(string text, Func<(int Start, int End), bool> place)
+    {
+        var taken = new List<(SensitiveKind Kind, int Start, int End)>();
         foreach ((SensitiveKind kind, Regex pattern, Func<string, bool> accept) in Rules)
         {
-            foreach (Match m in pattern.Matches(lineText))
+            foreach (Match m in pattern.Matches(text))
             {
                 int start = m.Index, end = m.Index + m.Length;
-                if (taken.Any(t => start < t.End && t.Start < end) || !accept(m.Value))
+                if (taken.Any(t => start < t.End && t.Start < end) || !accept(m.Value) || !place((start, end)))
                 {
                     continue;
                 }
-                Rectangle bounds = BoundsOf(spans, start, end);
-                if (bounds.IsEmpty)
-                {
-                    continue;
-                }
-                taken.Add((start, end));
-                found.Add(new SensitiveMatch(kind, m.Value, bounds));
+                taken.Add((kind, start, end));
             }
         }
+        return taken;
     }
 
     /// <summary>

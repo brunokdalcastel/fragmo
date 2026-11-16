@@ -33,6 +33,7 @@ internal sealed class SettingsForm : Form
     private readonly CheckBox _startWithWindows = new() { AutoSize = true };
     private readonly CheckBox _showMagnifier = new() { AutoSize = true };
     private readonly CheckBox _autoRedact = new() { AutoSize = true };
+    private readonly CheckBox _redactTutorials = new() { AutoSize = true };
     private readonly ComboBox _themeBox = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 160 };
     private readonly ComboBox _language = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 160 };
     private Button? _okButton;
@@ -146,6 +147,8 @@ internal sealed class SettingsForm : Form
         AddWide(grid, _showMagnifier);
         _autoRedact.Text = Strings.AutoRedactOnCapture;
         AddWide(grid, _autoRedact);
+        _redactTutorials.Text = Strings.RedactTutorials;
+        AddWide(grid, _redactTutorials);
 
         _themeBox.Items.AddRange([Strings.ThemeDark, Strings.ThemeLight, Strings.FollowWindows]);
         AddRow(grid, Strings.LabelTheme, _themeBox);
@@ -198,6 +201,7 @@ internal sealed class SettingsForm : Form
         _startWithWindows.Checked = startWithWindows;
         _showMagnifier.Checked = s.ShowMagnifier;
         _autoRedact.Checked = s.AutoRedactOnCapture;
+        _redactTutorials.Checked = s.RedactTutorials;
         _themeBox.SelectedIndex = Array.IndexOf(ThemeOrder, s.Theme);
         _language.SelectedIndex = Array.IndexOf(LanguageOrder, s.Language);
         UpdateSaveFields();
@@ -212,6 +216,8 @@ internal sealed class SettingsForm : Form
         s.Hotkeys.CaptureFullScreen = HotkeyText(HotkeyAction.CaptureFullScreen);
         s.Hotkeys.CaptureWindow = HotkeyText(HotkeyAction.CaptureWindow);
         s.Hotkeys.RepeatLastArea = HotkeyText(HotkeyAction.RepeatLastArea);
+        s.Hotkeys.ToggleTutorial = HotkeyText(HotkeyAction.ToggleTutorial);
+        s.Hotkeys.TutorialManualStep = HotkeyText(HotkeyAction.TutorialManualStep);
         s.SaveFolder = _folder.Text.Trim();
         s.DefaultFormat = SelectedFormat;
         s.JpegQuality = (int)_quality.Value;
@@ -220,6 +226,7 @@ internal sealed class SettingsForm : Form
         s.StartWithWindows = _startWithWindows.Checked;
         s.ShowMagnifier = _showMagnifier.Checked;
         s.AutoRedactOnCapture = _autoRedact.Checked;
+        s.RedactTutorials = _redactTutorials.Checked;
         s.Theme = ThemeOrder[Math.Max(0, _themeBox.SelectedIndex)];
         s.Language = LanguageOrder[Math.Max(0, _language.SelectedIndex)];
     }

@@ -9,12 +9,14 @@ using Grip = Fragmo.Overlay.SelectionGeometry.Handle;
 
 namespace Fragmo.Overlay;
 
-internal enum OverlayResult { Cancel, Copy, Save, Pin, Print, CopyText }
+internal enum OverlayResult { Cancel, Copy, Save, Pin, Print, CopyText, Done }
 
 /// <summary>
 /// Janela de tela cheia sobre a tela congelada, onde o usuário escolhe a área a capturar.
 /// Tudo em pixels físicos: coordenadas do cliente = coordenadas do bitmap.
 /// Depois de selecionar, vira o editor: barras de ferramentas, anotações e desfazer/refazer.
+/// No modo tutorial a seleção é fixa (a imagem do passo) e o único resultado além de cancelar é
+/// <see cref="OverlayResult.Done"/>.
 /// </summary>
 internal sealed class SelectionOverlay : Form
 {
@@ -49,6 +51,7 @@ internal sealed class SelectionOverlay : Form
     private readonly Action<string>? _notify;
     private readonly string _initialColor;
     private readonly int _initialThickness;
+    private readonly bool _tutorialMode;
 
     private State _state = State.Idle;
     private Rectangle _selection;
@@ -77,10 +80,15 @@ internal sealed class SelectionOverlay : Form
     /// o overlay abre direto no editor.
     /// </param>
     /// <param name="notify">Avisos curtos para a bandeja (ex.: quantos itens o desfoque automático cobriu).</param>
+    /// <param name="tutorialMode">
+    /// Editar a imagem de um passo: a seleção (<paramref name="initialSelection"/>, obrigatória) não pode ser
+    /// movida nem refeita, a barra só tem ferramentas + Concluir + Cancelar e a ocultação automática não roda sozinha.
+    /// </param>
     public SelectionOverlay(CapturedScreen screen, AppSettings settings, Rectangle? initialSelection = null,
-        Action<string>? notify = null)
+        Action<string>? notify = null, bool tutorialMode = false)
     {
         _screen = screen;
+        _tutorialMode = tutorialMode;
         _settings = settings;
         _notify = notify;
         _theme = Theme.Resolve(settings.Theme);
@@ -157,7 +165,10 @@ internal sealed class SelectionOverlay : Form
         {
             ShowToolbar();
             UpdateCursor(_cursor);
-            AutoRedactIfEnabled();
+            if (!_tutorialMode)
+            {
+                AutoRedactIfEnabled();
+            }
         }
         Activate();
         Focus();
@@ -215,6 +226,16 @@ internal sealed class SelectionOverlay : Form
         if (_state != State.Selected)
         {
             return false;
+        }
+
+        if (_tutorialMode && keyData is Keys.Enter or (Keys.Control | Keys.C) or (Keys.Control | Keys.S))
+        {
+            Finish(OverlayResult.Done);
+            return true;
+        }
+        if (_tutorialMode && keyData is (Keys.Control | Keys.T) or (Keys.Control | Keys.P) or Keys.O)
+        {
+            return true; // saídas da captura não existem aqui
         }
 
         switch (keyData)
@@ -288,6 +309,11 @@ internal sealed class SelectionOverlay : Form
             return;
         }
 
+        if (_tutorialMode && e.Button != MouseButtons.Left)
+        {
+            return;
+        }
+
         if (e.Button == MouseButtons.Right)
         {
             if (_state == State.Idle)
@@ -309,6 +335,10 @@ internal sealed class SelectionOverlay : Form
         {
             BeginAnnotation(e.Location);
             return;
+        }
+        if (_tutorialMode)
+        {
+            return; // a seleção é a imagem do passo: não se move nem se refaz
         }
 
         Grip grip = _state == State.Selected ? SelectionGeometry.HitTest(_selection, e.Location, GripSize) : Grip.None;
@@ -402,7 +432,7 @@ internal sealed class SelectionOverlay : Form
     {
         base.OnMouseDoubleClick(e);
         // Com uma ferramenta de desenho, o duplo clique faz parte do desenho e não copia.
-        if (e.Button == MouseButtons.Left && _state == State.Selected && _tool == ToolKind.Select &&
+        if (!_tutorialMode && e.Button == MouseButtons.Left && _state == State.Selected && _tool == ToolKind.Select &&
             _selection.Contains(e.Location))
         {
             Finish(OverlayResult.Copy);
@@ -434,6 +464,11 @@ internal sealed class SelectionOverlay : Form
         if (_tool != ToolKind.Select && _selection.Contains(p))
         {
             Cursor = _tool == ToolKind.Text ? Cursors.IBeam : Cursors.Cross;
+            return;
+        }
+        if (_tutorialMode)
+        {
+            Cursor = Cursors.Default;
             return;
         }
         Cursor = CursorFor(SelectionGeometry.HitTest(_selection, p, GripSize));
@@ -702,13 +737,8 @@ internal sealed class SelectionOverlay : Form
                 return;
             }
 
-            List<Rectangle> targets = SensitiveDataDetector.Detect(text.Lines)
-                .Select(r =>
-                {
-                    r.Offset(area.Location);
-                    return Rectangle.Intersect(Rectangle.Inflate(r, AutoRedactPadding, AutoRedactPadding), area);
-                })
-                .Where(r => !r.IsEmpty && !AlreadyRedacted(r))
+            List<Rectangle> targets = SensitiveRedactor.Targets(text, area, AutoRedactPadding)
+                .Where(r => !AlreadyRedacted(r))
                 .ToList();
 
             if (targets.Count == 0)
@@ -765,7 +795,7 @@ internal sealed class SelectionOverlay : Form
     {
         if (_toolbar is null)
         {
-            _toolbar = new EditorToolbar(_theme, _style) { Visible = false };
+            _toolbar = new EditorToolbar(_theme, _style, _tutorialMode) { Visible = false };
             _toolbar.SetTool(_tool);
             _toolbar.SetUndoRedo(_history.CanUndo, _history.CanRedo);
             _toolbar.ToolChanged += SelectTool;
@@ -778,6 +808,7 @@ internal sealed class SelectionOverlay : Form
             _toolbar.CopyTextClicked += () => Finish(OverlayResult.CopyText);
             _toolbar.AutoRedactClicked += () => _ = AutoRedactAsync(automatic: false);
             _toolbar.SaveClicked += () => Finish(OverlayResult.Save);
+            _toolbar.DoneClicked += () => Finish(OverlayResult.Done);
             _toolbar.CloseClicked += () => Finish(OverlayResult.Cancel);
             Controls.Add(_toolbar);
         }
@@ -876,7 +907,7 @@ internal sealed class SelectionOverlay : Form
             g.FillRegion(_veilBrush, veil);
         }
 
-        if (HasSelection)
+        if (HasSelection && !_tutorialMode)
         {
             DrawSelectionFrame(g);
             if (SizeLabelVisible)

@@ -4,7 +4,8 @@ using Fragmo.Native;
 namespace Fragmo.Hotkeys;
 
 // CaptureAreaAlt: o atalho alternativo da área (Ctrl+Shift+S), registrado junto com o principal.
-internal enum HotkeyAction { CaptureArea, CaptureFullScreen, CaptureWindow, RepeatLastArea, CaptureAreaAlt }
+// TutorialManualStep: registrado só durante a gravação de um tutorial.
+internal enum HotkeyAction { CaptureArea, CaptureFullScreen, CaptureWindow, RepeatLastArea, CaptureAreaAlt, ToggleTutorial, TutorialManualStep }
 
 /// <summary>
 /// Registra atalhos globais numa janela só de mensagens e avisa quando são pressionados.
@@ -60,6 +61,22 @@ internal sealed class HotkeyManager : NativeWindow, IDisposable
             InstallHook();
             _hookRefresh.Start();
         }
+        return true;
+    }
+
+    /// <summary>Libera um atalho só. Devolve <c>false</c> se ele não estava registrado.</summary>
+    public bool TryUnregister(HotkeyAction action)
+    {
+        int id = (int)action + 1;
+        if (_printScreenAction == action)
+        {
+            StopPrintScreenHook();
+        }
+        if (!_registered.Remove(id))
+        {
+            return false;
+        }
+        User32.UnregisterHotKey(Handle, id);
         return true;
     }
 

@@ -49,4 +49,24 @@ public sealed class FileNameBuilderTests
         existing.Add(Path.Combine(@"C:\x", "a_2.png"));
         Assert.Equal("a_3.png", FileNameBuilder.MakeUnique(@"C:\x", "a.png", existing.Contains));
     }
+
+    [Theory]
+    [InlineData("Tutorial de 16/11/2026 08:30", "Tutorial de 16112026 0830")]
+    [InlineData("  Como  instalar\to   app.  ", "Como instalar o app")]
+    [InlineData("", "padrão")]
+    [InlineData("<>:\"/\\|?*", "padrão")]
+    [InlineData("NUL", "padrão")]
+    [InlineData("com1.txt", "padrão")]
+    [InlineData("Console", "Console")]
+    public void Sanitize_MakesAValidBaseName(string text, string expected)
+    {
+        Assert.Equal(expected, FileNameBuilder.Sanitize(text, "padrão"));
+    }
+
+    [Fact]
+    public void Sanitize_LongText_IsCut()
+    {
+        string result = FileNameBuilder.Sanitize(new string('a', 200), "x");
+        Assert.Equal(80, result.Length);
+    }
 }

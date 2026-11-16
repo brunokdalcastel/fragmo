@@ -51,4 +51,26 @@ public sealed class StringsTests : IDisposable
             Assert.True(pt != en, $"{p.Name} tem o mesmo texto nos dois idiomas: \"{pt}\"");
         }
     }
+
+    [Fact]
+    public void AllTexts_HaveSamePlaceholdersInBothLanguages()
+    {
+        var props = typeof(Strings)
+            .GetProperties(BindingFlags.Public | BindingFlags.Static)
+            .Where(p => p.PropertyType == typeof(string));
+
+        foreach (var p in props)
+        {
+            Strings.Apply(UiLanguage.Portuguese);
+            string pt = (string)p.GetValue(null)!;
+            Strings.Apply(UiLanguage.English);
+            string en = (string)p.GetValue(null)!;
+
+            Assert.True(Placeholders(pt).SetEquals(Placeholders(en)),
+                $"{p.Name}: marcadores diferentes entre \"{pt}\" e \"{en}\"");
+        }
+    }
+
+    private static HashSet<string> Placeholders(string text) =>
+        System.Text.RegularExpressions.Regex.Matches(text, @"\{\d+\}").Select(m => m.Value).ToHashSet();
 }

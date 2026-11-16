@@ -673,6 +673,7 @@ public sealed record StrokeStyle(Color Color, int Thickness);
 - `Ctrl+Shift+S` passa a ficar sempre registrado junto com a Print Screen (`HotkeyAction.CaptureAreaAlt`): o Windows pode aceitar o registro da Print Screen e mesmo assim não entregar a tecla.
 - 0.3.1: com a Print Screen sozinha registrada, `HotkeyManager` também instala um gancho de teclado (`WH_KEYBOARD_LL`) que dispara a captura e segura a tecla; combinações com modificadores passam direto. Decisão pura em `PrintScreenKeyFilter` (testes: `PrintScreenKeyFilterTests`). O gancho é reinstalado a cada minuto, porque o Windows o desliga em silêncio se ele demorar a responder.
 - 0.3.2: um clique com o botão esquerdo no ícone da bandeja já abre "Capturar área" (antes era duplo clique); o botão direito continua abrindo o menu.
+- 0.4.0: modo tutorial (gravação de passos, editor, exportação HTML/Markdown/PDF/Word). Spec e andamento em `docs/features/001-modo-tutorial/`.
 
 ### Verification
 - [x] Ponta a ponta com OCR real: 4 itens desfocados, CPF inválido mantido, um Ctrl+Z desfaz o lote.

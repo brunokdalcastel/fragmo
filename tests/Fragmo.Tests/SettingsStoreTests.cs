@@ -125,6 +125,36 @@ public sealed class SettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void Load_OldFileWithoutTutorialFields_UsesTutorialDefaults()
+    {
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(_store.FilePath,
+            """{ "hotkeys": { "captureArea": "Ctrl+Alt+A", "repeatLastArea": "Ctrl+Alt+R" }, "autoRedactOnCapture": true }""");
+
+        var s = _store.Load();
+
+        Assert.Equal("Ctrl+Alt+A", s.Hotkeys.CaptureArea);
+        Assert.Equal("Ctrl+Shift+G", s.Hotkeys.ToggleTutorial);
+        Assert.Equal("Ctrl+Shift+Y", s.Hotkeys.TutorialManualStep);
+        Assert.True(s.RedactTutorials);
+    }
+
+    [Fact]
+    public void SaveThenLoad_RoundTripsTutorialFields()
+    {
+        var original = new AppSettings { RedactTutorials = false };
+        original.Hotkeys.ToggleTutorial = "Ctrl+Alt+T";
+        original.Hotkeys.TutorialManualStep = "Ctrl+Alt+M";
+
+        _store.Save(original);
+        var loaded = _store.Load();
+
+        Assert.False(loaded.RedactTutorials);
+        Assert.Equal("Ctrl+Alt+T", loaded.Hotkeys.ToggleTutorial);
+        Assert.Equal("Ctrl+Alt+M", loaded.Hotkeys.TutorialManualStep);
+    }
+
+    [Fact]
     public void Defaults_AreDarkThemeAndSystemLanguage()
     {
         var s = new AppSettings();

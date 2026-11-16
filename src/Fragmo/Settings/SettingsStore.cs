@@ -71,6 +71,8 @@ public sealed class SettingsStore
         s.Hotkeys.CaptureFullScreen = OrDefault(s.Hotkeys.CaptureFullScreen, defaultKeys.CaptureFullScreen);
         s.Hotkeys.CaptureWindow = OrDefault(s.Hotkeys.CaptureWindow, defaultKeys.CaptureWindow);
         s.Hotkeys.RepeatLastArea = OrDefault(s.Hotkeys.RepeatLastArea, defaultKeys.RepeatLastArea);
+        s.Hotkeys.ToggleTutorial = OrDefault(s.Hotkeys.ToggleTutorial, defaultKeys.ToggleTutorial);
+        s.Hotkeys.TutorialManualStep = OrDefault(s.Hotkeys.TutorialManualStep, defaultKeys.TutorialManualStep);
 
         s.SaveFolder = OrDefault(s.SaveFolder, defaults.SaveFolder);
         s.FileNamePrefix = OrDefault(s.FileNamePrefix, defaults.FileNamePrefix);

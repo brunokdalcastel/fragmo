@@ -3,6 +3,8 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
+    <!-- Só pela UI Automation gerenciada (Tutorial/Capture/ElementInspector.cs). Nenhum outro arquivo importa System.Windows. -->
+    <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -26,5 +28,7 @@
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Fragmo.Tests" />
+    <!-- UseWPF tira System.IO dos usings implícitos (conflito com System.Windows.Shapes.Path); aqui não há esse conflito. -->
+    <Using Include="System.IO" />
   </ItemGroup>
 </Project>

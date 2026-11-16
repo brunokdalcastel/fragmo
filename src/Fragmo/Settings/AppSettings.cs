@@ -11,6 +11,8 @@ public sealed class HotkeySettings
     public string CaptureFullScreen { get; set; } = "Ctrl+Shift+F";
     public string CaptureWindow { get; set; } = "Ctrl+Shift+W";
     public string RepeatLastArea { get; set; } = "Ctrl+Shift+R";
+    public string ToggleTutorial { get; set; } = "Ctrl+Shift+G";
+    public string TutorialManualStep { get; set; } = "Ctrl+Shift+Y";
 }
 
 public sealed record RegionDto(int X, int Y, int Width, int Height);
@@ -27,6 +29,7 @@ public sealed class AppSettings
     public bool AskWhereToSave { get; set; } = true;
     public bool ShowMagnifier { get; set; } = true;
     public bool AutoRedactOnCapture { get; set; } = false;
+    public bool RedactTutorials { get; set; } = true;
     public bool StartWithWindows { get; set; } = false;
     public ThemeMode Theme { get; set; } = ThemeMode.Dark;
     public UiLanguage Language { get; set; } = UiLanguage.System;

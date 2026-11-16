@@ -53,6 +53,12 @@ internal static class ScreenCapturer
             return null;
         }
 
+        return GetWindowFrameBounds(hwnd);
+    }
+
+    /// <summary>Limites visíveis de uma janela (sem a sombra) em coordenadas de tela; <c>null</c> se falhar.</summary>
+    public static Rectangle? GetWindowFrameBounds(IntPtr hwnd)
+    {
         int hr = Dwmapi.DwmGetWindowAttribute(hwnd, Dwmapi.DWMWA_EXTENDED_FRAME_BOUNDS,
             out Dwmapi.RECT r, Marshal.SizeOf<Dwmapi.RECT>());
         if (hr != 0 || r.Right <= r.Left || r.Bottom <= r.Top)
@@ -60,6 +66,29 @@ internal static class ScreenCapturer
             return null;
         }
         return Rectangle.FromLTRB(r.Left, r.Top, r.Right, r.Bottom);
+    }
+
+    /// <summary>Copia só um trecho da tela (pixels físicos), mais rápido que a tela virtual inteira.</summary>
+    public static Bitmap CaptureRect(Rectangle screenRect)
+    {
+        if (screenRect.Width <= 0 || screenRect.Height <= 0)
+        {
+            throw new ArgumentException("Área vazia.", nameof(screenRect));
+        }
+        var bmp = new Bitmap(screenRect.Width, screenRect.Height, PixelFormat.Format32bppArgb);
+        try
+        {
+            using (var g = Graphics.FromImage(bmp))
+            {
+                g.CopyFromScreen(screenRect.Left, screenRect.Top, 0, 0, screenRect.Size, CopyPixelOperation.SourceCopy);
+            }
+            return bmp;
+        }
+        catch
+        {
+            bmp.Dispose();
+            throw;
+        }
     }
 
     public static Rectangle GetPrimaryScreenBounds() => Screen.PrimaryScreen!.Bounds;

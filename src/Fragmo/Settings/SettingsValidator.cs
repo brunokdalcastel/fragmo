@@ -42,5 +42,7 @@ public static class SettingsValidator
         (HotkeyAction.CaptureFullScreen, h.CaptureFullScreen),
         (HotkeyAction.CaptureWindow, h.CaptureWindow),
         (HotkeyAction.RepeatLastArea, h.RepeatLastArea),
+        (HotkeyAction.ToggleTutorial, h.ToggleTutorial),
+        (HotkeyAction.TutorialManualStep, h.TutorialManualStep),
     ];
 }

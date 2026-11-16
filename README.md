@@ -108,6 +108,49 @@ imagem antes de compartilhar e complete com a tarja à mão se precisar.
 
 <p align="center"><img src="docs/images/ocultar-dados.png" alt="Antes e depois: CPF, e-mail e celular cobertos com tarja preta" width="95%"></p>
 
+### Modo tutorial
+
+Precisa ensinar alguém a fazer algo no computador? Grave o procedimento uma vez e o Fragmo monta o passo a passo:
+um print por ação, com o elemento clicado destacado e o texto já escrito ("Clique no botão “Salvar”", "Digite no campo
+“Nome”", "Pressione Ctrl+S").
+
+1. **Grave.** Bandeja › **Gravar tutorial** (ou `Ctrl+Shift+G`). Uma barra pequena mostra quantos passos já foram
+   gravados e tem **Pausar**, **Parar** e **Descartar**. Ela não aparece nos prints.
+2. **Faça o procedimento** normalmente. Viram passos: clique, clique com o botão direito, clique duplo, digitação num
+   campo (um passo por campo), atalho de teclado e o **passo manual** (`Ctrl+Shift+Y`), que tira um print da janela
+   em primeiro plano sem clicar em nada. Rolagem e arrastar não viram passo.
+3. **Pare** (`Ctrl+Shift+G` ou **Parar** na barra) e o **editor de tutorial** abre: mude o título e os textos, suba,
+   desça e exclua passos, insira notas, ligue ou desligue o destaque e desenhe na imagem com as mesmas ferramentas
+   da captura (**Editar imagem**). `Ctrl+Z` desfaz.
+4. **Exporte** para **HTML** (um arquivo só, com as imagens dentro), **Markdown** (com uma pasta de imagens),
+   **PDF** ou **Word** (`.docx`). Ou **salve** o tutorial (`.fragmotut`) para continuar editando depois, pelo menu
+   **Abrir tutorial…** da bandeja.
+
+<p align="center"><img src="docs/images/tutorial-editor.png" alt="Editor de tutorial: lista de passos com miniaturas à esquerda e o passo selecionado com o campo destacado à direita" width="95%"></p>
+
+**O que você digita não é gravado.** O Fragmo só registra que houve digitação naquele campo; em campos de senha, o
+texto do passo vira "Digite a senha no campo…". Os ganchos de mouse e teclado só existem durante a gravação e saem ao parar.
+Se o Fragmo fechar no meio, a gravação fica guardada em `%LOCALAPPDATA%\Fragmo\Tutorials` e ele oferece recuperar
+na próxima abertura.
+
+Antes de compartilhar um tutorial, saiba que:
+
+- **A ocultação automática não substitui a sua revisão.** Com **"Ocultar dados sensíveis nos tutoriais"** ligado
+  (padrão, em Configurações), cada print passa pela mesma busca de [dados sensíveis](#ocultar-dados-sensíveis), mas
+  ela pode deixar passar algo. Confira os passos e use **Editar imagem** com a tarja quando precisar.
+- **O título da janela entra no texto do passo** e pode ter dados pessoais (nome de arquivo, assunto de e-mail).
+  Ele passa pela mesma busca de dados sensíveis, mas revise os textos.
+- **O arquivo `.fragmotut` guarda as imagens originais**, sem as tarjas aplicadas (as tarjas ficam como dados, para
+  você poder editar). Compartilhe as exportações (HTML, Markdown, PDF, Word), que sempre saem com as tarjas, e não o
+  `.fragmotut`.
+- **O PDF só mostra o alfabeto latino** (acentos e "ç" funcionam). Outros caracteres, como emoji, viram `?`. Para
+  esses textos, exporte em HTML ou Word.
+- **Janelas abertas como administrador** (Gerenciador de Tarefas, instaladores, Editor do Registro) podem não ser
+  gravadas: o Windows não deixa um programa comum observar essas janelas, então o clique pode não virar passo ou
+  sair sem o nome do elemento.
+- **Algum antivírus pode estranhar** um programa que escuta mouse e teclado. O Fragmo só faz isso enquanto grava e
+  nada do que é digitado é gravado.
+
 ### Atalhos globais
 
 | Ação | Atalho padrão |
@@ -116,6 +159,8 @@ imagem antes de compartilhar e complete com a tarja à mão se precisar.
 | Tela cheia → salva direto na pasta | `Ctrl+Shift+F` |
 | Janela ativa → abre no editor | `Ctrl+Shift+W` |
 | Repetir a última área | `Ctrl+Shift+R` |
+| Gravar / parar tutorial | `Ctrl+Shift+G` |
+| Passo manual (só durante a gravação) | `Ctrl+Shift+Y` |
 
 ### Configurações
 
@@ -144,7 +189,8 @@ aviso, sabendo que o que não foi salvo se perde. Em instalação silenciosa (`/
 ### Privacidade
 
 O Fragmo não acessa a rede e não tem telemetria. As capturas ficam em `%USERPROFILE%\Pictures\Fragmo` (ou na
-pasta que você escolher) e as configurações em `%APPDATA%\Fragmo`.
+pasta que você escolher), as configurações em `%APPDATA%\Fragmo` e as gravações e tutoriais abertos no editor em
+`%LOCALAPPDATA%\Fragmo\Tutorials` (a pasta de cada tutorial é apagada quando você fecha o editor).
 
 ### Desenvolvimento
 
@@ -251,6 +297,49 @@ and add redactions by hand if needed.
 
 <p align="center"><img src="docs/images/ocultar-dados.png" alt="Before and after: CPF, email and phone covered with black redaction bars" width="95%"></p>
 
+### Tutorial mode
+
+Need to show someone how to do something on the computer? Record the procedure once and Fragmo builds the
+step-by-step guide: one screenshot per action, with the clicked element highlighted and the text already written
+("Click the “Save” button", "Type in the “Name” field", "Press Ctrl+S").
+
+1. **Record.** Tray › **Record tutorial** (or `Ctrl+Shift+G`). A small bar shows how many steps were recorded and has
+   **Pause**, **Stop** and **Discard**. It never shows up in the screenshots.
+2. **Do the procedure** as usual. These become steps: click, right-click, double-click, typing in a field (one step
+   per field), keyboard shortcuts and the **manual step** (`Ctrl+Shift+Y`), which takes a screenshot of the foreground
+   window without clicking anything. Scrolling and dragging do not become steps.
+3. **Stop** (`Ctrl+Shift+G` or **Stop** on the bar) and the **tutorial editor** opens: change the title and the texts,
+   move steps up and down, delete them, insert notes, turn the highlight on or off and draw on the image with the same
+   tools as a capture (**Edit image**). `Ctrl+Z` undoes.
+4. **Export** to **HTML** (a single file with the images inside), **Markdown** (with an images folder), **PDF** or
+   **Word** (`.docx`). Or **save** the tutorial (`.fragmotut`) to keep editing later through **Open tutorial…** in the
+   tray menu.
+
+<p align="center"><img src="docs/images/tutorial-editor.png" alt="Tutorial editor: the step list with thumbnails on the left and the selected step with the highlighted field on the right" width="95%"></p>
+
+**What you type is not recorded.** Fragmo only records that something was typed in that field; in password fields
+the step text becomes "Type the password in the … field". The mouse and keyboard hooks only exist while recording and are removed
+when you stop. If Fragmo closes mid-recording, the recording is kept in `%LOCALAPPDATA%\Fragmo\Tutorials` and Fragmo
+offers to recover it the next time it starts.
+
+Before you share a tutorial:
+
+- **Automatic hiding does not replace your own review.** With **"Hide sensitive data in tutorials"** on (the default,
+  in Settings), every screenshot goes through the same [sensitive data](#hide-sensitive-data) search, but it can miss
+  something. Check the steps and use **Edit image** with the redaction tool when needed.
+- **The window title goes into the step text** and may contain personal data (a file name, an email subject). It goes
+  through the same sensitive data search, but review the texts.
+- **A `.fragmotut` file keeps the original images**, without the redactions applied (they are stored as data so you
+  can still edit them). Share the exports (HTML, Markdown, PDF, Word), which always include the redactions, not the
+  `.fragmotut`.
+- **The PDF only shows the Latin alphabet** (accents work). Other characters, such as emoji, become `?`. For those
+  texts, export to HTML or Word.
+- **Windows running as administrator** (Task Manager, installers, Registry Editor) may not be recorded: Windows does
+  not let a regular program watch those windows, so a click may not become a step or may come without the element
+  name.
+- **Some antivirus software may flag** a program that listens to the mouse and keyboard. Fragmo only does it while
+  recording, and nothing you type is recorded.
+
 ### Global hotkeys
 
 | Action | Default hotkey |
@@ -259,6 +348,8 @@ and add redactions by hand if needed.
 | Full screen → saved straight to the folder | `Ctrl+Shift+F` |
 | Active window → opens in the editor | `Ctrl+Shift+W` |
 | Repeat last area | `Ctrl+Shift+R` |
+| Record / stop tutorial | `Ctrl+Shift+G` |
+| Manual step (only while recording) | `Ctrl+Shift+Y` |
 
 ### Settings
 
@@ -284,7 +375,8 @@ anything unsaved is lost. In silent installs (`/VERYSILENT`) it never forces: it
 ### Privacy
 
 Fragmo never touches the network and has no telemetry. Captures go to `%USERPROFILE%\Pictures\Fragmo` (or the
-folder you choose) and settings to `%APPDATA%\Fragmo`.
+folder you choose), settings to `%APPDATA%\Fragmo`, and recordings and tutorials open in the editor to
+`%LOCALAPPDATA%\Fragmo\Tutorials` (each tutorial's folder is deleted when you close the editor).
 
 ### Development
 

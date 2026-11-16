@@ -217,4 +217,39 @@ public sealed class SensitiveDataDetectorTests
     {
         Assert.Empty(Find("Relatório de vendas do terceiro trimestre", "Valores em milhares de reais"));
     }
+
+    // ----- MaskText (modo tutorial) -----
+
+    [Fact]
+    public void MaskText_Cpf()
+    {
+        Assert.Equal("Cliente ••• (ativo)", SensitiveDataDetector.MaskText("Cliente 529.982.247-25 (ativo)"));
+    }
+
+    [Fact]
+    public void MaskText_Email_WithoutSpaces()
+    {
+        Assert.Equal("Caixa de entrada - ••• - Outlook",
+            SensitiveDataDetector.MaskText("Caixa de entrada - fulano@empresa.com.br - Outlook"));
+    }
+
+    [Fact]
+    public void MaskText_SeveralItems()
+    {
+        Assert.Equal("••• e •••", SensitiveDataDetector.MaskText("a@b.com e 529.982.247-25"));
+    }
+
+    [Fact]
+    public void MaskText_InvalidCpf_Untouched()
+    {
+        Assert.Equal("Pedido 529.982.247-24", SensitiveDataDetector.MaskText("Pedido 529.982.247-24"));
+    }
+
+    [Theory]
+    [InlineData("Relatório de vendas")]
+    [InlineData("")]
+    public void MaskText_CleanText_Untouched(string text)
+    {
+        Assert.Equal(text, SensitiveDataDetector.MaskText(text));
+    }
 }

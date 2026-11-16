@@ -4,6 +4,7 @@ using Fragmo.Hotkeys;
 using Fragmo.Output;
 using Fragmo.Pin;
 using Fragmo.Settings;
+using Fragmo.Tutorial;
 using Fragmo.Ui;
 
 namespace Fragmo;
@@ -23,6 +24,8 @@ internal sealed class TrayContext : ApplicationContext
     private readonly Icon _icon;
     private readonly HotkeyManager _hotkeys;
     private readonly CaptureWorkflow _workflow;
+    private readonly TutorialWorkflow _tutorial;
+    private ToolStripMenuItem? _tutorialItem;
     private readonly List<PinWindow> _pins = [];
     private SettingsForm? _settingsForm;
     private readonly CloseRequestListener _closeRequests;
@@ -44,10 +47,13 @@ internal sealed class TrayContext : ApplicationContext
         };
 
         _workflow = new CaptureWorkflow(settings, store, new OutputService(settings), this);
+        _tutorial = new TutorialWorkflow(settings, this);
+        _tutorial.RecordingChanged += OnRecordingChanged;
         // Um clique com o botão esquerdo já captura; o direito continua abrindo o menu.
+        // Durante a gravação o clique esquerdo não faz nada (RF1).
         _notifyIcon.MouseClick += (_, e) =>
         {
-            if (e.Button == MouseButtons.Left)
+            if (e.Button == MouseButtons.Left && !_tutorial.IsRecording)
             {
                 _workflow.CaptureArea();
             }
@@ -60,6 +66,7 @@ internal sealed class TrayContext : ApplicationContext
         {
             ReportHotkeyFailures(failed);
         }
+        _tutorial.CheckUnfinishedOnStartup(quiet);
     }
 
     public void ShowInfo(string text) =>
@@ -80,6 +87,11 @@ internal sealed class TrayContext : ApplicationContext
         List<HotkeyAction> failed = [];
         foreach ((HotkeyAction action, string text) in SettingsValidator.HotkeyEntries(_settings.Hotkeys))
         {
+            // O passo manual só existe durante a gravação (tirá-lo do resto do tempo libera o atalho).
+            if (action == HotkeyAction.TutorialManualStep && !_tutorial.IsRecording)
+            {
+                continue;
+            }
             if (!string.IsNullOrWhiteSpace(text) && !TryRegister(action, text))
             {
                 failed.Add(action);
@@ -158,27 +170,91 @@ internal sealed class TrayContext : ApplicationContext
         {
             case HotkeyAction.CaptureArea:
             case HotkeyAction.CaptureAreaAlt:
-                _workflow.CaptureArea();
+                Capture(_workflow.CaptureArea);
                 break;
             case HotkeyAction.CaptureFullScreen:
-                _workflow.CaptureFullScreen();
+                Capture(_workflow.CaptureFullScreen);
                 break;
             case HotkeyAction.CaptureWindow:
-                _workflow.CaptureWindow();
+                Capture(_workflow.CaptureWindow);
                 break;
             case HotkeyAction.RepeatLastArea:
-                _workflow.RepeatLastArea();
+                Capture(_workflow.RepeatLastArea);
                 break;
+            case HotkeyAction.ToggleTutorial:
+                ToggleTutorial();
+                break;
+            case HotkeyAction.TutorialManualStep:
+                _tutorial.ManualStep();
+                break;
+        }
+    }
+
+    /// <summary>As capturas comuns ficam bloqueadas enquanto um tutorial é gravado.</summary>
+    private void Capture(Action capture)
+    {
+        if (_tutorial.IsRecording)
+        {
+            ShowInfo(Strings.StopRecordingFirst);
+            return;
+        }
+        capture();
+    }
+
+    private void ToggleTutorial()
+    {
+        // Não começa a gravar com uma captura aberta na tela.
+        if (!_tutorial.IsRecording && _workflow.IsBusy)
+        {
+            return;
+        }
+        _tutorial.ToggleRecording();
+    }
+
+    /// <summary>Atalho de passo manual entra e sai junto com a gravação; o menu troca o texto.</summary>
+    private void OnRecordingChanged(bool recording)
+    {
+        if (recording)
+        {
+            if (!TryRegister(HotkeyAction.TutorialManualStep, _settings.Hotkeys.TutorialManualStep))
+            {
+                ShowError(string.Format(Strings.HotkeysInUse, _settings.Hotkeys.TutorialManualStep));
+            }
+        }
+        else
+        {
+            _hotkeys.TryUnregister(HotkeyAction.TutorialManualStep);
+        }
+        UpdateTutorialItem();
+    }
+
+    private void UpdateTutorialItem()
+    {
+        if (_tutorialItem is not null)
+        {
+            _tutorialItem.Text = _tutorial.IsRecording ? Strings.MenuStopRecording : Strings.MenuRecordTutorial;
         }
     }
 
     private ContextMenuStrip BuildMenu()
     {
         var menu = new ContextMenuStrip();
-        AddCaptureItem(menu, Strings.MenuCaptureArea, () => _workflow.CaptureArea());
-        AddCaptureItem(menu, Strings.MenuFullScreen, () => _workflow.CaptureFullScreen());
-        AddCaptureItem(menu, Strings.MenuWindow, () => _workflow.CaptureWindow());
-        AddCaptureItem(menu, Strings.MenuRepeatLast, () => _workflow.RepeatLastArea());
+        AddCaptureItem(menu, Strings.MenuCaptureArea, () => Capture(_workflow.CaptureArea));
+        AddCaptureItem(menu, Strings.MenuFullScreen, () => Capture(_workflow.CaptureFullScreen));
+        AddCaptureItem(menu, Strings.MenuWindow, () => Capture(_workflow.CaptureWindow));
+        AddCaptureItem(menu, Strings.MenuRepeatLast, () => Capture(_workflow.RepeatLastArea));
+        // Espera o menu sumir antes de começar, como nas capturas.
+        _tutorialItem = new ToolStripMenuItem(Strings.MenuRecordTutorial, null, async (_, _) =>
+        {
+            if (!_tutorial.IsRecording)
+            {
+                await Task.Delay(MenuCloseDelayMs);
+            }
+            ToggleTutorial();
+        });
+        menu.Items.Add(_tutorialItem);
+        menu.Opening += (_, _) => UpdateTutorialItem();
+        menu.Items.Add(Strings.MenuOpenTutorial, null, (_, _) => _tutorial.OpenTutorial());
         var closePins = new ToolStripMenuItem(Strings.MenuClosePins, null, (_, _) => CloseAllPins());
         menu.Items.Add(closePins);
         menu.Opening += (_, _) => closePins.Enabled = _pins.Count > 0;
@@ -272,11 +348,11 @@ internal sealed class TrayContext : ApplicationContext
 
     /// <summary>
     /// Pedido do instalador. Fecha normalmente, a não ser que algo possa se perder: captura em edição,
-    /// imagem fixada ou configurações abertas. Nesse caso continua aberto e o instalador avisa o usuário.
+    /// imagem fixada, editor de tutorial ou configurações abertas. Nesse caso continua aberto e o instalador avisa o usuário.
     /// </summary>
     private void OnCloseRequested()
     {
-        if (_workflow.IsBusy || _pins.Count > 0 || _settingsForm is not null)
+        if (_workflow.IsBusy || _tutorial.IsRecording || _tutorial.HasOpenEditors || _pins.Count > 0 || _settingsForm is not null)
         {
             return;
         }
@@ -286,6 +362,7 @@ internal sealed class TrayContext : ApplicationContext
     protected override void ExitThreadCore()
     {
         _closeRequests.Dispose();
+        _tutorial.Dispose();
         CloseAllPins();
         _settingsForm?.Close();
         _hotkeys.Dispose();
