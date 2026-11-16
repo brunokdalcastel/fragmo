@@ -13,7 +13,7 @@
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <RootNamespace>Fragmo</RootNamespace>
     <AssemblyName>Fragmo</AssemblyName>
-    <Version>0.3.2</Version>
+    <Version>0.4.0</Version>
     <Product>Fragmo</Product>
     <ApplicationIcon>Resources\fragmo.ico</ApplicationIcon>
     <DebugType>embedded</DebugType>
