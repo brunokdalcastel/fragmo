@@ -180,3 +180,32 @@ O Fragmo instalado está aberto (instância única): fechar pela bandeja e rodar
 - [ ] Teste do PRD: procedimento de 10 cliques → exportado em menos de 1 minuto depois de parar.
 - [ ] Os checklists manuais das Fases 1, 3, 4 e 5 (o build não foi aberto aqui porque o Fragmo instalado está rodando).
 - [ ] Publicar o release v0.4.0 no GitHub (push + `Fragmo-Setup.exe` e `Fragmo.exe`) depois dos testes manuais.
+
+## 2026-11-16 · Testes da 0.4.0 instalada (automatizados onde deu)
+
+O gravador ignora entrada simulada (`LLMHF_INJECTED`/`LLKHF_INJECTED`), então clique sintético não vira passo. O que deu para automatizar:
+
+### No app instalado (0.4.0)
+- [x] `Ctrl+Shift+G` (atalho global) começa a gravar; a barra aparece com contagem, Pausar, Parar e Descartar.
+- [x] `Ctrl+Shift+Y` ×10 → 10 passos manuais, um PNG cada, `tutorial.json` com `finished: false`.
+- [x] Cliques físicos reais (do usuário, que estava usando o PC) viraram passos com nome de elemento e janela: os ganchos funcionam no build instalado.
+- [x] A barra tem `WDA_EXCLUDEFROMCAPTURE` ativo (`GetWindowDisplayAffinity` = 0x11).
+- [x] Descartar apaga a sessão inteira.
+- [x] Gravador parado: 0 ms de CPU em 10 s.
+
+### Gravador alimentado direto (teste temporário, sem ganchos), contra uma janela de teste em outro processo, tela a 125%
+- [x] Clique em botão → "Clique no botão “Salvar” na janela “Cadastro de teste”", retângulo e ponto do clique corretos.
+- [x] Caixa → "Marque a caixa “Aceito os termos”"; campo → "Clique no campo “Nome”".
+- [x] Duplo clique → **um** passo "Clique duas vezes em “Salvar”".
+- [x] Botão direito num rótulo com CPF → "Clique com o botão direito em “CPF: •••”" (nome mascarado, RF9).
+- [x] CPF válido visível → tarja em `Redactions` e na imagem exportada.
+- [x] Digitação (14 teclas) → um passo `Type`; o texto digitado não existe em nenhum arquivo da sessão (busca em Latin-1 e UTF-16).
+- [x] Atalho `Ctrl+S` → passo `Shortcut`; passo manual → `Manual`.
+- [x] Exportar os 4 formatos: 267 ms no total (o alvo do PRD é < 1 min); `.fragmotut` salvo e reaberto igual.
+- [x] Editor com 200 passos: subir, descer, excluir, inserir nota e desligar destaque, cada um desfeito; lista rolada duas vezes → working set ~105 MB (limite ~300 MB).
+
+### Não testado (precisa de pessoa na frente da tela)
+- [ ] `.docx` no Word sem aviso de reparo (automação COM do Word quebrada neste PC).
+- [ ] "Editar imagem" (overlay modal em tela cheia) e Salvar/Exportar pelos diálogos do editor.
+- [ ] Pergunta de recuperação ao reabrir depois de matar o processo.
+- [ ] Campo de senha, dois monitores com escalas diferentes, janela de administrador.
